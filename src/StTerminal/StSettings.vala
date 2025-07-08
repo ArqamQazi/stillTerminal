@@ -144,5 +144,19 @@ namespace StillTerminal {
             app.set_accels_for_action ("app.zoom-in", settings.get_strv ("shortcut-zoom-in"));
             app.set_accels_for_action ("app.zoom-out", settings.get_strv ("shortcut-zoom-out"));
         }
+
+        public void bind_to_shortcut_controller (ShortcutController controller) {
+            settings.bind ("shortcut-new-tab", controller, "new-tab", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-close-tab", controller, "close-tab", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-next-tab", controller, "next-tab", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-previous-tab", controller, "previous-tab", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-copy", controller, "copy", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-paste", controller, "paste", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-fullscreen", controller, "fullscreen", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-new-window", controller, "new-window", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-preferences", controller, "preferences", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-zoom-in", controller, "zoom-in", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-zoom-out", controller, "zoom-out", SettingsBindFlags.DEFAULT);
+        }
     }
 }
