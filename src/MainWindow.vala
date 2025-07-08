@@ -4,7 +4,6 @@ namespace StillTerminal {
         public Adw.TabView tab_view;
         public StillTerminal.StSettings settings;
         public StHeaderBar header;
-        public ShortcutController shortcuts = new ShortcutController ();
 
         public MainWindow (Adw.Application app) {
             Object (application: app);
@@ -82,27 +81,27 @@ namespace StillTerminal {
                 this.get_current_terminal_page ().terminal.paste_clipboard ();
             });
             app.add_action (paste_action);
-    
+
             var fullscreen_action = new SimpleAction ("fullscreen", null);
             fullscreen_action.activate.connect (() => {
                 this.fullscreen ();
             });
             app.add_action (fullscreen_action);
-    
+
             var new_window_action = new SimpleAction ("new-window", null);
             new_window_action.activate.connect (() => {
                 var win = new MainWindow (this.get_application () as Adw.Application);
                 win.present ();
             });
             app.add_action (new_window_action);
-            
+
             var quit_action = new SimpleAction ("preferences", null);
             quit_action.activate.connect (() => {
                 var dialog = new StPrefsDialog (this);
                 dialog.present (this);
             });
             app.add_action (quit_action);
-    
+
             var zoom_in_action = new SimpleAction ("zoom-in", null);
             zoom_in_action.activate.connect (() => {
                 this.get_current_terminal_page ().modify_zoom (0.1);
@@ -116,13 +115,13 @@ namespace StillTerminal {
             app.add_action (zoom_out_action);
 
             this.settings.refresh_accelerators(app);
-            
+
             // SHORTCUTS
             //  this.add_controller (shortcuts.controller);
             //  this.settings.bind_to_shortcut_controller (shortcuts);
             //  this.shortcuts.refresh_shortcuts ();
         }
-    
+
         public Adw.TabPage add_tab (StProfile profile) {
             var page = new StTerminalPage (this.settings, profile);
             Adw.TabPage tab_page = this.tab_view.append (page);
@@ -154,7 +153,7 @@ namespace StillTerminal {
             stdout.printf("%s\n", this.tab_view.get_selected_page ().get_type().name());
             return this.tab_view.get_selected_page ().get_child () as StTerminalPage;
         }
-    
+
         public override void size_allocate (int width, int height, int baseline) {
             if (this.settings.keep_window_size) {
                 this.settings.window_width = width;

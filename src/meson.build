@@ -2,7 +2,6 @@ sources = files(
   'Constants.vala',
   'Main.vala',
   'MainWindow.vala',
-  'ShortcutController.vala',
 )
 
 subdir('data')
