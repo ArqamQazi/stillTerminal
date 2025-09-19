@@ -1,10 +1,12 @@
 namespace StillTerminal {
     public class StPrefsGeneralPage : Adw.PreferencesPage {
+        public StPrefsDialog dialog;
         public StPrefsWindowGroup window_group;
         public StPrefsCellSpacingGroup cell_spacing_group;
         public StPrefsAppearanceGroup appearance_group;
         
-        public StPrefsGeneralPage () {
+        public StPrefsGeneralPage (StPrefsDialog dialog) {
+            this.dialog = dialog;
             this.window_group = new StPrefsWindowGroup ();
             this.cell_spacing_group = new StPrefsCellSpacingGroup ();
             this.appearance_group = new StPrefsAppearanceGroup ();
@@ -89,10 +91,10 @@ namespace StillTerminal {
 
     public class StPrefsAppearanceGroup : Adw.PreferencesGroup {
         public bool change_settings = false;
-        public Adw.ComboRow system_color;
-        private string[] available_scheme_strings = {};
-        public Adw.SwitchRow use_profile_color;
-        public Adw.SwitchRow use_tab_color;
+        public Adw.ActionRow system_color_row;
+        // Removed: global container theme matching toggle (now per-profile)
+        // removed: available_scheme_strings
+
         public Adw.SpinRow padding;
         public Adw.SpinRow opacity_setting; // different name to avoid conflict with opacity property
         public Adw.SwitchRow use_custom_font;
@@ -105,22 +107,30 @@ namespace StillTerminal {
         public StPrefsAppearanceGroup () {
             this.set_title ("Appearance");
 
-            this.system_color = new Adw.ComboRow ();
-            this.system_color.set_title ("System Color Scheme");
-            var available_schemes = get_available_schemes ();
-            foreach (var scheme in available_schemes.keys) {
-                this.available_scheme_strings += scheme;
-            }
+            // Replace dropdown with a row + button that opens the theme picker page
+            this.system_color_row = new Adw.ActionRow ();
+            this.system_color_row.set_title ("System Color Scheme");
+            var open_button = new Gtk.Button.with_label ("Choose…");
+            open_button.add_css_class ("flat");
+            open_button.valign = Gtk.Align.CENTER;
+            open_button.clicked.connect (() => {
+                var picker = new StThemePickerPage ("System Theme", false, null);
+                picker.scheme_selected.connect ((id) => {
+                    var s = new GLib.Settings ("io.stillhq.terminal");
+                    s.set_string ("system-color", id);
+                    string subtitle = id;
+                    var scheme = StColorScheme.new_from_id(id);
+                    if (scheme != null && scheme.name != null && scheme.name != "") subtitle = scheme.name;
+                    this.system_color_row.set_subtitle (subtitle);
+                    var dlg = this.get_ancestor(typeof(Adw.PreferencesDialog)) as Adw.PreferencesDialog;
+                    if (dlg != null) dlg.pop_subpage ();
+                });
+                var dlg = this.get_ancestor(typeof(Adw.PreferencesDialog)) as Adw.PreferencesDialog;
+                if (dlg != null) dlg.push_subpage (picker);
+            });
+            this.system_color_row.add_suffix (open_button);
+            this.system_color_row.set_activatable_widget (open_button);
 
-            this.system_color.set_model(
-                new Gtk.StringList(available_scheme_strings)
-            );
-
-            this.use_profile_color = new Adw.SwitchRow ();
-            this.use_profile_color.set_title ("Use Profile Specific Color Scheme");
-
-            this.use_tab_color = new Adw.SwitchRow ();
-            this.use_tab_color.set_title ("Use Tab Color Scheme");
 
             this.padding = new Adw.SpinRow.with_range (0, 10, 1);
             this.padding.set_title ("Padding");
@@ -146,9 +156,7 @@ namespace StillTerminal {
             this.custom_font.add_suffix (this.font_button);
             this.custom_font.set_activatable_widget (this.font_button);
 
-            this.add (this.system_color);
-            this.add (this.use_profile_color);
-            this.add (this.use_tab_color);
+            this.add (this.system_color_row);
             this.add (this.padding);
             this.add (this.opacity_setting);
             this.add (this.bold_is_bright);
@@ -157,34 +165,21 @@ namespace StillTerminal {
             this.add (this.custom_font);
         }
 
-        public void scheme_dropdown_changed (Settings settings) {
-            string selected_scheme = available_scheme_strings[this.system_color.get_selected ()];
-            if (settings.get_string("system-color") == selected_scheme) {
-                return;
-            }
-
-            settings.set_string("system-color", selected_scheme);
-        }
-
         public void scheme_setting_changed (GLib.Settings settings, string key) {
             if (key != "system-color") {
                 return;
             }
 
-            var scheme = settings.get_string (key);
-            if (scheme == this.available_scheme_strings[this.system_color.get_selected()]) {
-                return;
+            var id = settings.get_string (key);
+            string subtitle = id;
+            var scheme = StColorScheme.new_from_id(id);
+            if (scheme != null && scheme.name != null && scheme.name != "") {
+                subtitle = scheme.name;
             }
-            for (int i = 0; i < this.available_scheme_strings.length; i++) {
-                if (this.available_scheme_strings[i] == scheme) {
-                    this.system_color.set_selected (i);
-                    return;
-                }
-            }
+            this.system_color_row.set_subtitle (subtitle);
         }
 
         public void font_button_changed (Settings settings) {
-            print("font button changed");
             string selected_font = this.font_button.get_font_desc ().to_string();
             if (settings.get_string("custom-font") == selected_font) {
                 return;

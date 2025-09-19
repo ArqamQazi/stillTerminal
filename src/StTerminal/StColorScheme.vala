@@ -314,11 +314,11 @@ namespace StillTerminal {
 
         public static StColorScheme? new_from_json(string filename) {
             // Each json will have a light and dark hash with the colors
-            
+
             try {
                 Json.Parser parser = new Json.Parser();
-                parser.load_from_file (filename);
-                
+                parser.load_from_file(filename);
+
                 Json.Object obj = parser.get_root ().get_object();
 
                 string id = obj.get_string_member ("id");
@@ -327,7 +327,7 @@ namespace StillTerminal {
                 // Extract light and dark color schemes
                 Json.Object light = obj.get_object_member("light");
                 Json.Object dark = obj.get_object_member("dark");
-                
+
                 // Create the color scheme using new_from_colors
                 return new_from_colors (
                     id, name,
@@ -389,47 +389,192 @@ namespace StillTerminal {
     }
     
     public string[] get_scheme_dirs() {
-        string[] user_dirs = {};
+        string[] scheme_dirs = {};
+
+        // Add user-local themes directory first
+        string user_dir = GLib.Environment.get_user_data_dir();
+        if (GLib.FileUtils.test(user_dir, GLib.FileTest.IS_DIR)) {
+            scheme_dirs += (user_dir + "/stillTerminal/themes");
+        }
+
+        // Add system themes directories (contains both built-in and admin-installed schemes)
         foreach (string dir in GLib.Environment.get_system_data_dirs ()) {
             if (GLib.FileUtils.test(dir, GLib.FileTest.IS_DIR)) {
-                user_dirs += (dir + "/stillTerminal/themes");
+                scheme_dirs += (dir + "/stillTerminal/themes");
             }
-            user_dirs += (dir + "/stillTerminal/themes");
         }
-        return user_dirs;
+
+        return scheme_dirs;
     }
 
     public Gee.HashMap<string, string> get_available_schemes () {
         Gee.HashMap<string, string> available_schemes = new Gee.HashMap<string, string>();
 
-        // THIS IS FOR TESTING PURPOSES
-        // TODO: Remove this
-        available_schemes["Adwaita"] = "/home/cameron/Documents/stillOS/stillTerminal/data/schemes/Adwaita.json";
-        available_schemes["Fedora"] = "/home/cameron/Documents/stillOS/stillTerminal/data/schemes/Fedora.json";
-        available_schemes["Ubuntu"] = "/home/cameron/Documents/stillOS/stillTerminal/data/schemes/Ubuntu.json";
-        available_schemes["Debian"] = "/home/cameron/Documents/stillOS/stillTerminal/data/schemes/Debian.json";
-        // available_schemes["RedHat"] = "/home/cameronknauff/Documents/stillTerminal/data/schemes/RedHat.json";
-        
+        // Load schemes from system directories (both built-in and user-defined)
         string[] dirs = get_scheme_dirs();
         try {
             foreach (string dir_path in dirs) {
-                GLib.Dir dir = GLib.Dir.open(dir_path);
-                string? filename = dir.read_name();
-                while (filename  != null) {
-                    if (filename.has_suffix(".json")) {
-                        // try loading json to check if it's valid
-                        try {
-                            Json.Parser parser = new Json.Parser();
-                            parser.load_from_file (filename);
-                            string id = parser.get_root().get_object().get_string_member("id");
-                            if (StColorScheme.new_from_json (dir_path + "/" + filename) != null) {
-                                available_schemes[id] = dir_path + "/" + filename;
-                            }
-                        } catch (GLib.Error e) {}
+                if (GLib.FileUtils.test(dir_path, GLib.FileTest.IS_DIR)) {
+                    GLib.Dir dir = GLib.Dir.open(dir_path);
+                    string? filename = dir.read_name();
+                    while (filename != null) {
+                        if (filename.has_suffix(".json")) {
+                            string full_path = dir_path + "/" + filename;
+                            // try loading json to check if it's valid
+                            try {
+                                Json.Parser parser = new Json.Parser();
+                                parser.load_from_file(full_path);
+                                string id = parser.get_root().get_object().get_string_member("id");
+                                if (StColorScheme.new_from_json(full_path) != null) {
+                                    available_schemes[id] = full_path;
+                                }
+                            } catch (GLib.Error e) {}
+                        }
+                        filename = dir.read_name();
                     }
                 }
             }
         } catch (GLib.FileError e) {}
+
+        // Ensure Adwaita theme is always available as fallback
+        ensure_default_theme_available(available_schemes);
+
         return available_schemes;
+    }
+
+    private void ensure_default_theme_available(Gee.HashMap<string, string> available_schemes) {
+        // If no Adwaita theme is found, try to create a basic fallback
+        if (!available_schemes.has_key("adwaita")) {
+            // Try to find Adwaita in any of the scheme directories
+            string[] dirs = get_scheme_dirs();
+            foreach (string dir_path in dirs) {
+                string adwaita_path = dir_path + "/Adwaita.json";
+                if (GLib.FileUtils.test(adwaita_path, GLib.FileTest.EXISTS)) {
+                    available_schemes["adwaita"] = adwaita_path;
+                    break;
+                }
+            }
+
+            // If Adwaita is still not found, create a basic fallback theme
+            if (!available_schemes.has_key("adwaita")) {
+                create_fallback_theme(available_schemes);
+            }
+        }
+    }
+
+    private void create_fallback_theme(Gee.HashMap<string, string> available_schemes) {
+        // Create a basic fallback theme based on system colors
+        // This provides a minimal theme when no schemes are available
+        string fallback_path = "";
+
+        // Try to save to user directory first, then system directory
+        string[] dirs = get_scheme_dirs();
+        foreach (string dir_path in dirs) {
+            // Prefer user-writable directories
+            if (dir_path.contains(GLib.Environment.get_user_data_dir())) {
+                if (GLib.FileUtils.test(dir_path, GLib.FileTest.IS_DIR)) {
+                    fallback_path = dir_path + "/Adwaita.json";
+                    break;
+                }
+            }
+        }
+
+        // If no user directory available, use first system directory
+        if (fallback_path == "" && dirs.length > 0) {
+            fallback_path = dirs[0] + "/Adwaita.json";
+        }
+
+        if (fallback_path != "") {
+            try {
+                // Create basic Adwaita-like theme
+                string fallback_json = """
+                {
+                    "id": "adwaita",
+                    "name": "Adwaita",
+                    "light": {
+                        "foreground_color": "#241f31",
+                        "background_color": "#ffffff",
+                        "bold_color": "#241f31",
+                        "cursor_color": "#241f31",
+                        "highlight_color": "#3584e4",
+                        "black": "#000000",
+                        "red": "#c01c28",
+                        "green": "#26a269",
+                        "yellow": "#f5c211",
+                        "blue": "#3584e4",
+                        "magenta": "#813d9c",
+                        "cyan": "#05d7cc",
+                        "white": "#c0bfbc",
+                        "bright_black": "#5e5c64",
+                        "bright_red": "#e01b24",
+                        "bright_green": "#2ec27e",
+                        "bright_yellow": "#f8e45c",
+                        "bright_blue": "#1e78ea",
+                        "bright_magenta": "#a347ba",
+                        "bright_cyan": "#0ab9dc",
+                        "bright_white": "#f6f5f4"
+                    },
+                    "dark": {
+                        "foreground_color": "#deddda",
+                        "background_color": "#1e1e2e",
+                        "bold_color": "#deddda",
+                        "cursor_color": "#deddda",
+                        "highlight_color": "#3584e4",
+                        "black": "#000000",
+                        "red": "#f66151",
+                        "green": "#33d17a",
+                        "yellow": "#f5c211",
+                        "blue": "#3584e4",
+                        "magenta": "#dc8add",
+                        "cyan": "#4fd2d6",
+                        "white": "#c0bfbc",
+                        "bright_black": "#5e5c64",
+                        "bright_red": "#ff7b63",
+                        "bright_green": "#57e389",
+                        "bright_yellow": "#f8e45c",
+                        "bright_blue": "#51a1ff",
+                        "bright_magenta": "#e9a9ff",
+                        "bright_cyan": "#7ad9e6",
+                        "bright_white": "#f6f5f4"
+                    }
+                }
+                """;
+
+                GLib.FileUtils.set_contents(fallback_path, fallback_json);
+                available_schemes["adwaita"] = fallback_path;
+            } catch (GLib.FileError e) {
+                // If we can't create the fallback file, continue without it
+                // The application should still work with basic colors
+            }
+        }
+    }
+
+        public static StColorScheme? get_default_scheme() {
+        // Try to load Adwaita theme first
+        var available_schemes = get_available_schemes();
+        if (available_schemes.has_key("adwaita")) {
+            var adwaita_scheme = StColorScheme.new_from_json(available_schemes["adwaita"]);
+            if (adwaita_scheme != null) {
+                return adwaita_scheme;
+            }
+        }
+
+        // If Adwaita fails, create a basic fallback scheme
+            return create_basic_fallback_scheme();
+    }
+
+    public static StColorScheme? create_basic_fallback_scheme() {
+        // Create a minimal scheme with system colors
+        return StColorScheme.new_from_colors(
+            "fallback", "System Fallback",
+            "#000000", "#ffffff", "#000000",  // light: fg, bg, bold
+            "#000000", "#add8e6",             // light: cursor, highlight
+            "#000000", "#ff0000", "#00ff00", "#ffff00", "#0000ff", "#ff00ff", "#00ffff", "#ffffff",  // light colors
+            "#808080", "#ff8080", "#80ff80", "#ffff80", "#8080ff", "#ff80ff", "#80ffff", "#ffffff",  // light bright colors
+            "#ffffff", "#000000", "#ffffff",  // dark: fg, bg, bold
+            "#ffffff", "#4169e1",             // dark: cursor, highlight
+            "#000000", "#ff0000", "#00ff00", "#ffff00", "#0000ff", "#ff00ff", "#00ffff", "#ffffff",  // dark colors
+            "#808080", "#ff8080", "#80ff80", "#ffff80", "#8080ff", "#ff80ff", "#80ffff", "#ffffff"   // dark bright colors
+        );
     }
 }

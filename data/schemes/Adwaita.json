@@ -1,6 +1,6 @@
 {
-    "id": "libadwaita_scheme",
-    "name": "Libadwaita Color Scheme",
+    "id": "adwaita",
+    "name": "Default (Libadwaita)",
     "light": {
       "foreground_color": "#000000cc",
       "background_color": "#fafafa",

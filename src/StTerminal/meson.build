@@ -3,4 +3,6 @@ sources += files(
   'StSettings.vala',
   'StColorScheme.vala',
   'StProfile.vala',
+  'StNewTabDialog.vala',
+  'StSecretManager.vala',
 )

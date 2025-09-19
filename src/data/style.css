@@ -1,6 +1,15 @@
 /* Custom Headerbar COPIED from Blackbox */
 .custom-headerbar {
-    background-color: @headerbar_bg_color;
+    background-color: var(--headerbar-bg-color);
+    color: var(--headerbar-fg-color);
+}
+
+/* Ensure icons inside the custom headerbar inherit the headerbar foreground color */
+.custom-headerbar image,
+.custom-headerbar .image,
+.custom-headerbar button,
+.custom-headerbar button > * {
+    color: var(--headerbar-fg-color);
 }
 
 .custom-headerbar.backdrop {
@@ -18,4 +27,16 @@
 
 tabbar {
     margin-bottom: 100px;
+}
+
+/* Profile emoji icons */
+.large-emoji {
+    font-size: 24px;
+    font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", emoji;
+}
+
+/* Ensure popover menu content doesn't get an internal scroller by allowing it to expand */
+.st-no-scroll contents,
+.st-no-scroll viewport {
+    min-height: 0;
 }

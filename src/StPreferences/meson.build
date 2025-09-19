@@ -3,5 +3,7 @@ sources += files(
   'StPrefsGeneralPage.vala',
   'StPrefsProfilePage.vala',
   'StPrefsProfileCreator.vala',
-  'StPrefsProfileEditor.vala'
+  'StPrefsProfileEditor.vala',
+  'StPrefsShortcutsPage.vala',
+  'StThemePickerPage.vala'
 )

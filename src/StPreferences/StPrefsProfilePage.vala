@@ -1,24 +1,80 @@
 namespace StillTerminal {
     public class StPrefsProfilePage : Adw.PreferencesPage {
         public StPrefsDialog dialog;
-        private Adw.PreferencesGroup profiles_group;
-        Adw.ActionRow[] rows = {};
+        private Adw.PreferencesGroup system_group;
+        private Adw.PreferencesGroup containers_group;
+        private Adw.PreferencesGroup ssh_group;
+        private Adw.PreferencesGroup creation_group;
+        Adw.ActionRow[] system_rows = {};
+        Adw.ActionRow[] container_rows = {};
+        Adw.ActionRow[] ssh_rows = {};
 
         public StPrefsProfilePage (StPrefsDialog dialog) {
             this.dialog = dialog;
             this.set_title ("Profiles");
             this.set_icon_name ("utilities-terminal-symbolic");
 
-            this.profiles_group = new Adw.PreferencesGroup ();
-            var profile_button = new Gtk.Button ();
-            profile_button.set_label ("New Profile");
-            profile_button.clicked.connect (() => {
-                var profile_creator = new StProfileCreatorTypePage (this.dialog);
-                this.dialog.preferences_dialog.push_subpage (profile_creator);
+            this.setup_profile_groups();
+            this.regenerate_profile_list ();
+        }
+        
+        private void setup_profile_groups() {
+            // System profiles group
+            this.system_group = new Adw.PreferencesGroup ();
+            this.system_group.set_title ("System Profiles");
+            this.system_group.set_description ("Terminals accessing your local system");
+            this.add (system_group);
+
+            // Container profiles group
+            this.containers_group = new Adw.PreferencesGroup ();
+            this.containers_group.set_title ("Container Profiles");
+            this.containers_group.set_description ("Terminals accessing containerized environments");
+            this.add (containers_group);
+
+            // SSH profiles group
+            this.ssh_group = new Adw.PreferencesGroup ();
+            this.ssh_group.set_title ("Remote SSH Profiles");
+            this.ssh_group.set_description ("Terminals accessing remote servers");
+            this.add (ssh_group);
+        }
+        
+        private void create_profile_of_type(StProfileType type) {
+            var blank_profile = StProfile.new_blank_profile();
+            blank_profile.type = type;
+            
+            // Set appropriate default values based on type
+            switch (type) {
+                case StProfileType.SYSTEM:
+                    blank_profile.type_subtitle = "";
+                    break;
+                case StProfileType.DISTROBOX:
+                    blank_profile.type_subtitle = "Container Environment";
+                    break;
+                case StProfileType.SSH:
+                    blank_profile.type_subtitle = "Remote Connection";
+                    break;
+            }
+            
+            this.push_profile_editor(blank_profile);
+        }
+        
+        private void push_profile_editor(StProfile profile) {
+            var editor_page = new StProfileEditorPage(this.dialog, profile);
+            var create_button = new Gtk.Button.with_label("Create");
+            create_button.clicked.connect(() => {
+                this.create_profile_button(editor_page);
             });
-            this.profiles_group.set_header_suffix (profile_button);
-            this.add (profiles_group);
-            regenerate_profile_list ();
+            editor_page.set_button(create_button);
+            this.dialog.preferences_dialog.push_subpage(editor_page);
+        }
+        
+        private void create_profile_button(StProfileEditorPage editor_page) {
+            var profile = editor_page.get_edited_profile();
+            profile.save_to_json(get_local_profile_dir() + "/" + profile.id + ".json");
+            this.regenerate_profile_list();
+            // Pop the editor page, then the type selector beneath it
+            this.dialog.preferences_dialog.pop_subpage();
+            this.dialog.preferences_dialog.pop_subpage();
         }
 
         private void save_profile_with_backup (StProfile profile) {
@@ -39,7 +95,7 @@ namespace StillTerminal {
                     backup_file.delete();
                 }
                 
-                print("Profile saved successfully.\n");
+                // Saved successfully
             } catch (Error e) {
                 print("Error saving profile: %s\n", e.message);
                 
@@ -48,7 +104,7 @@ namespace StillTerminal {
                     if (backup_file.query_exists()) {
                         original_file.delete(); // Delete the potentially corrupted file
                         backup_file.move(original_file, FileCopyFlags.OVERWRITE);
-                        print("Profile restored from backup.\n");
+                    // Restored from backup
                     }
                 } catch (Error restore_error) {
                     print("Error restoring from backup: %s\n", restore_error.message);
@@ -61,25 +117,65 @@ namespace StillTerminal {
             
             var save_button = new Gtk.Button.with_label ("Save");
             save_button.clicked.connect(() => {
-                this.save_profile_with_backup(profile_editor.get_edited_profile ());
-                this.dialog.window.header.update_new_tab_menu ();
+                var edited = profile_editor.get_edited_profile ();
+                bool should_delete = false;
+                // Detect create-time changes for distrobox profiles
+                if (profile.type == StProfileType.DISTROBOX) {
+                    // Compare current vs edited create-time subset
+                    Gee.HashMap<string,string> before = new Gee.HashMap<string,string>();
+                    if (profile.type_params != null) {
+                        foreach (var entry in profile.type_params.entries) before[entry.key] = entry.value;
+                    }
+                    Gee.HashMap<string,string> after = new Gee.HashMap<string,string>();
+                    if (edited.type_params != null) {
+                        foreach (var entry in edited.type_params.entries) after[entry.key] = entry.value;
+                    }
+                    string[] keys = {"image","additional_packages","additional_flags","volumes","init","root","pull","home","hostname","platform","pre_init_hooks","init_hooks"};
+                    foreach (string k in keys) {
+                        string bv = before.has_key(k) ? (before[k] ?? "") : "";
+                        string av = after.has_key(k) ? (after[k] ?? "") : "";
+                        if (bv != av) { should_delete = true; break; }
+                    }
+                }
+
+                this.save_profile_with_backup(edited);
+
+                if (edited.type == StProfileType.DISTROBOX && should_delete) {
+                    string old_name = "stillterminal-" + profile.id;
+                    if (profile.type_params != null && profile.type_params.has_key("name") && profile.type_params["name"].strip() != "")
+                        old_name = profile.type_params["name"].strip();
+                    string[] argv = {"distrobox", "rm", "-f", old_name};
+                    int status = 0; string? out_s = null; string? err_s = null;
+                    try {
+                        GLib.Process.spawn_sync(null, argv, null, GLib.SpawnFlags.SEARCH_PATH, null, out out_s, out err_s, out status);
+                    } catch (GLib.SpawnError e) {
+                        // Ignore failure; user can manage containers manually
+                    }
+                }
+
                 regenerate_profile_list ();
                 this.dialog.preferences_dialog.pop_subpage ();
             });
             profile_editor.set_button (save_button);
             
             if (profile.id != "default") {
+                // Group destructive actions on the left of the header and style as destructive
+                var destructive_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 6);
+
                 var remove_button = new Gtk.Button.with_label ("Remove Profile");
                 remove_button.add_css_class ("destructive-action");
                 remove_button.clicked.connect (() => {
                     var file = File.new_for_path(profile.profile_file);
-                    try { file.delete(); }
-                    catch (Error e) { print ("Error deleting profile: $(e.message)\n"); }
-                    this.dialog.window.header.update_new_tab_menu ();
+                    try { file.delete(); } catch (Error e) { print ("Error deleting profile: %s\n".printf (e.message)); }
+
+                    // Clear stored SSH password if any
+                    StSecretManager.clear_password(profile.id);
+
                     regenerate_profile_list ();
                     this.dialog.preferences_dialog.pop_subpage ();
                 });
-                profile_editor.header.pack_end (remove_button);
+                destructive_box.append(remove_button);
+                profile_editor.header.pack_start (destructive_box);
             }
 
             this.dialog.preferences_dialog.push_subpage (profile_editor);
@@ -87,9 +183,20 @@ namespace StillTerminal {
 
         
         public void regenerate_profile_list () {
-            foreach (var row in this.rows) {
-                this.profiles_group.remove (row);
+            // Clear only existing profile rows (not the "Create New Profile" action rows)
+            foreach (var row in this.system_rows) {
+                this.system_group.remove (row);
             }
+            foreach (var row in this.container_rows) {
+                this.containers_group.remove (row);
+            }
+            foreach (var row in this.ssh_rows) {
+                this.ssh_group.remove (row);
+            }
+            
+            this.system_rows = {};
+            this.container_rows = {};
+            this.ssh_rows = {};
 
             var profile_index = get_profiles ();
             
@@ -97,30 +204,120 @@ namespace StillTerminal {
                 var row = new Adw.ActionRow ();
                 row.set_title (profile.name);
 
-                Gtk.Image icon;
-                if (profile.icon_name != null && profile.icon_name in StillTerminal.AVAILABLE_ICONS) {
-                    icon = new Gtk.Image.from_resource (@"/io/stillhq/terminal/icons/$(profile.icon_name).svg");
-                } else {
-                    icon = new Gtk.Image.from_icon_name ("utilities-terminal-symbolic");
-                }
-                icon.set_pixel_size (32);
-                row.add_prefix (icon);
+                // Create icon widget with proper emoji and resource support
+                var icon_widget = this.create_profile_icon(profile);
+                row.add_prefix (icon_widget);
 
-                if (profile.type_subtitle != null) {
+                if (profile.type_subtitle != null && profile.type_subtitle != "") {
                     row.set_subtitle (profile.type_subtitle);
                 }
 
-                var button = new Gtk.Button.from_icon_name ("go-next");
-                button.add_css_class ("flat");
-                button.valign = Gtk.Align.CENTER;
-                button.clicked.connect (() => {
+                var arrow_icon = new Gtk.Image.from_icon_name ("go-next-symbolic");
+                arrow_icon.add_css_class ("dim-label");
+                row.add_suffix (arrow_icon);
+                
+                row.set_activatable(true);
+                row.activated.connect (() => {
                     this.open_profile_editor (profile);
                 });
-                row.add_suffix (button);
-                row.set_activatable_widget (button);
-                this.profiles_group.add (row);
-                this.rows += row;
+                
+                // Add to appropriate group based on profile type
+                switch (profile.type) {
+                    case StProfileType.SYSTEM:
+                        this.system_group.add (row);
+                        this.system_rows += row;
+                        break;
+                    case StProfileType.DISTROBOX:
+                        this.containers_group.add (row);
+                        this.container_rows += row;
+                        break;
+                    case StProfileType.SSH:
+                        this.ssh_group.add (row);
+                        this.ssh_rows += row;
+                        break;
+                }
             }
+            
+            // Add a single nameless group with one "Add Container Profile" option
+            this.add_single_container_add_row();
+            
+            // Always show groups so users can access "New Profile" action rows
+            this.system_group.visible = true;
+            this.containers_group.visible = true;
+            this.ssh_group.visible = true;
+        }
+        
+        private void add_single_container_add_row() {
+            if (this.creation_group != null) {
+                this.remove(this.creation_group);
+                this.creation_group = null;
+            }
+            this.creation_group = new Adw.PreferencesGroup();
+            // Intentionally no title/description for a nameless group
+
+            var container_new_row = new Adw.ActionRow();
+            container_new_row.set_title("Add Profile");
+            container_new_row.set_subtitle("Create a new terminal profile");
+
+            var container_icon = new Gtk.Image.from_icon_name("list-add-symbolic");
+            container_icon.pixel_size = 24;
+            container_new_row.add_prefix(container_icon);
+
+            var container_arrow = new Gtk.Image.from_icon_name("go-next-symbolic");
+            container_arrow.add_css_class("dim-label");
+            container_new_row.add_suffix(container_arrow);
+
+            container_new_row.set_activatable(true);
+            container_new_row.activated.connect(() => {
+                this.open_type_selector();
+            });
+
+            this.creation_group.add(container_new_row);
+            this.add(this.creation_group);
+        }
+
+        private void open_type_selector() {
+            var selector = new StProfileTypeSelectorSubpage(this.dialog);
+            selector.type_selected.connect((t) => {
+                // Push editor on top of selector so Back returns to selector
+                this.create_profile_of_type(t);
+            });
+            this.dialog.preferences_dialog.push_subpage(selector);
+        }
+        
+        private Gtk.Widget create_profile_icon(StProfile profile) {
+            // Check if the icon is an emoji
+            if (profile.icon_name != null && profile.icon_name != "" && this.is_emoji(profile.icon_name)) {
+                var emoji_label = new Gtk.Label(profile.icon_name);
+                emoji_label.add_css_class("large-emoji");
+                emoji_label.set_size_request(32, 32);
+                return emoji_label;
+            }
+            
+            // Create image widget
+            var icon_image = new Gtk.Image();
+            icon_image.pixel_size = 32;
+            
+            // Check if it's a Linux distro icon from resources
+            if (profile.icon_name != null && profile.icon_name in AVAILABLE_ICONS) {
+                icon_image.set_from_resource(@"/io/stillhq/terminal/icons/$(profile.icon_name).svg");
+            } else {
+                // Use default terminal icon
+                icon_image.set_from_icon_name("utilities-terminal-symbolic");
+            }
+            
+            return icon_image;
+        }
+        
+        private bool is_emoji(string text) {
+            // Check for non-ASCII characters that are likely emoji
+            uint8[] bytes = text.data;
+            for (int i = 0; i < bytes.length; i++) {
+                if (bytes[i] > 127) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

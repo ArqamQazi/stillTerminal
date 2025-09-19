@@ -12,6 +12,13 @@
     <file preprocess="xml-stripblanks">icons/opensuse.svg</file>
     <file preprocess="xml-stripblanks">icons/ubuntu.svg</file>
     <file preprocess="xml-stripblanks">icons/redhat.svg</file>
-    <file preprocess="xml-stripblanks">icons/settings-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/settings-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/menu-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/menu-large-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/document-edit-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/question-round-outline-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/arrow-hook-left-horizontal2-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/lightbulb-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/multitasking-symbolic.svg</file>
   </gresource>
 </gresources>

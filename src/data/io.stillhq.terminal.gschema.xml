@@ -51,16 +51,13 @@
       <summary>System Color</summary>
       <description>The system color to use.</description>
     </key>
-    <key name="use-profile-color" type="b">
+
+    <key name="use-container-scheme-when-system" type="b">
       <default>true</default>
-      <summary>Use Profile Color</summary>
-      <description>Whether to use the profile color.</description>
+      <summary>Use container theme when System is selected</summary>
+      <description>When a profile's color scheme is set to "system" and the profile is a container, prefer a color scheme matching the container's distro.</description>
     </key>
-    <key name="use-tab-color" type="b">
-      <default>false</default>
-      <summary>Use Tab Color</summary>
-      <description>Whether to use the tab color.</description>
-    </key>
+
     <key name="padding" type="i">
       <default>0</default>
       <summary>Padding</summary>
@@ -87,9 +84,14 @@
       <description>Sends a notification when the terminal is not focused and a task has finished.</description>
     </key>
     <key name="shortcut-new-tab" type="as">
-      <default>['&lt;Control&gt;&lt;Shift&gt;t']</default>
+      <default>['&lt;Control&gt;t']</default>
       <summary>Create new tab</summary>
       <description>Keyboard shortcut to create a new terminal tab</description>
+    </key>
+    <key name="shortcut-reopen-last-tab" type="as">
+      <default>['&lt;Control&gt;&lt;Shift&gt;t']</default>
+      <summary>Reopen most recent tab</summary>
+      <description>Keyboard shortcut to open a new tab using the most recently used profile</description>
     </key>
     <key name="shortcut-close-tab" type="as">
       <default>['&lt;Control&gt;&lt;Shift&gt;w']</default>
@@ -140,6 +142,31 @@
       <default>['&lt;Control&gt;minus']</default>
       <summary>Zoom out</summary>
       <description>Keyboard shortcut to decrease terminal font size</description>
+    </key>
+    <key name="shortcut-select-all" type="as">
+      <default>['&lt;Control&gt;a']</default>
+      <summary>Select all</summary>
+      <description>Keyboard shortcut to select all terminal content</description>
+    </key>
+    <key name="shortcut-tab-overview-toggle" type="as">
+      <default>['&lt;Control&gt;&lt;Shift&gt;o']</default>
+      <summary>Toggle tab overview</summary>
+      <description>Keyboard shortcut to toggle tab overview</description>
+    </key>
+    <key name="shortcut-tab-overview-open" type="as">
+      <default>['&lt;Control&gt;&lt;Shift&gt;p']</default>
+      <summary>Open tab overview</summary>
+      <description>Keyboard shortcut to open tab overview</description>
+    </key>
+    <key name="shortcut-tab-overview-close" type="as">
+      <default>['Escape']</default>
+      <summary>Close tab overview</summary>
+      <description>Keyboard shortcut to close tab overview</description>
+    </key>
+    <key name="last-profile-id" type="s">
+      <default>'default'</default>
+      <summary>Last opened profile id</summary>
+      <description>Stores the id of the most recently opened profile to restore as the first tab at startup</description>
     </key>
   </schema>
 </schemalist>

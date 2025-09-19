@@ -9,8 +9,6 @@ namespace StillTerminal {
     
         // Appearance
         public string system_color { get; set; }
-        public bool use_profile_color { get; set; }
-        public bool use_tab_color { get; set; }
         public int padding { get; set; }
         public int opacity { get; set; }
         public bool use_custom_font { get; set; }
@@ -24,6 +22,7 @@ namespace StillTerminal {
         // Misc
         public bool easy_copy_paste { get; set; }
         public bool notification_on_task { get; set; }
+        public string last_profile_id { get; set; }
         public GLib.Settings settings;
     
         public StSettings () {
@@ -38,13 +37,12 @@ namespace StillTerminal {
             settings.bind ("bold-is-bright", this, "bold_is_bright", SettingsBindFlags.DEFAULT);
             settings.bind ("easy-copy-paste", this, "easy_copy_paste", SettingsBindFlags.DEFAULT);
             settings.bind ("system-color", this, "system_color", SettingsBindFlags.DEFAULT);
-            settings.bind ("use-profile-color", this, "use_profile_color", SettingsBindFlags.DEFAULT);
-            settings.bind ("use-tab-color", this, "use_tab_color", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", this, "padding", SettingsBindFlags.DEFAULT);
             settings.bind ("opacity", this, "opacity", SettingsBindFlags.DEFAULT);
             settings.bind ("show-scrollbar", this, "show_scrollbar", SettingsBindFlags.DEFAULT);
             settings.bind ("scrollback-limit", this, "scrollback_limit", SettingsBindFlags.DEFAULT);
             settings.bind ("notification-on-task", this, "notification_on_task", SettingsBindFlags.DEFAULT);
+            settings.bind ("last-profile-id", this, "last_profile_id", SettingsBindFlags.DEFAULT);
         }
   
         public void bind_to_vte (StTerminal vte) {
@@ -70,13 +68,10 @@ namespace StillTerminal {
                         vte.set_appearance ();
                     }
                 );
+                // Removed global container scheme matching binding; now per-profile
             }
 
-            this.notify["use-profile-color"].connect(
-                (_settings, _pspec) => {
-                    vte.set_appearance ();
-                }
-            );
+
             this.notify["opacity"].connect(
                 (_settings, _pspec) => {
                     vte.set_appearance ();
@@ -92,23 +87,16 @@ namespace StillTerminal {
             settings.bind ("keep-window-size", general.window_group.window_height, "sensitive", SettingsBindFlags.INVERT_BOOLEAN);
             settings.bind ("cell-height", general.cell_spacing_group.cell_height, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("cell-width", general.cell_spacing_group.cell_width, "value", SettingsBindFlags.DEFAULT);
-            settings.bind ("use-profile-color", general.appearance_group.use_profile_color, "active", SettingsBindFlags.DEFAULT);
-            settings.bind ("use-tab-color", general.appearance_group.use_tab_color, "active", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", general.appearance_group.padding, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("opacity", general.appearance_group.opacity_setting, "value", SettingsBindFlags.DEFAULT);
+            // Removed global container scheme matching binding
             settings.bind ("use-custom-font", general.appearance_group.use_custom_font, "active", SettingsBindFlags.DEFAULT);
             settings.bind ("use-custom-font", general.appearance_group.custom_font, "sensitive", SettingsBindFlags.DEFAULT);
             settings.bind ("bold-is-bright", general.appearance_group.bold_is_bright, "active", SettingsBindFlags.DEFAULT);
             settings.bind ("show-scrollbar", general.appearance_group.show_scrollbars, "active", SettingsBindFlags.INVERT_BOOLEAN);
 
-            // Connecting dropdown to system color
+            // Initialize and keep the row subtitle in sync with setting
             general.appearance_group.scheme_setting_changed(this.settings, "system-color");
-
-            general.appearance_group.system_color.notify["selected"].connect(
-                (_combo, _spec) => {
-                    general.appearance_group.scheme_dropdown_changed(this.settings);
-                }
-            );
             settings.changed.connect((key) => {
                 if (key == "system-color") {
                     general.appearance_group.scheme_setting_changed(this.settings, key);
@@ -133,6 +121,7 @@ namespace StillTerminal {
 
         public void refresh_accelerators (Gtk.Application app) {
             app.set_accels_for_action ("app.new-tab", settings.get_strv ("shortcut-new-tab"));
+            app.set_accels_for_action ("app.reopen-last-tab", settings.get_strv ("shortcut-reopen-last-tab"));
             app.set_accels_for_action ("app.close-tab", settings.get_strv ("shortcut-close-tab"));
             app.set_accels_for_action ("app.next-tab", settings.get_strv ("shortcut-next-tab"));
             app.set_accels_for_action ("app.previous-tab", settings.get_strv ("shortcut-previous-tab"));
@@ -143,10 +132,16 @@ namespace StillTerminal {
             app.set_accels_for_action ("app.preferences", settings.get_strv ("shortcut-preferences"));
             app.set_accels_for_action ("app.zoom-in", settings.get_strv ("shortcut-zoom-in"));
             app.set_accels_for_action ("app.zoom-out", settings.get_strv ("shortcut-zoom-out"));
+            app.set_accels_for_action ("app.select-all", settings.get_strv ("shortcut-select-all"));
+            // Tab overview
+            app.set_accels_for_action ("app.tab-overview-toggle", settings.get_strv ("shortcut-tab-overview-toggle"));
+            app.set_accels_for_action ("app.tab-overview-open", settings.get_strv ("shortcut-tab-overview-open"));
+            app.set_accels_for_action ("app.tab-overview-close", settings.get_strv ("shortcut-tab-overview-close"));
         }
 
         public void bind_to_shortcut_controller (ShortcutController controller) {
             settings.bind ("shortcut-new-tab", controller, "new-tab", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-reopen-last-tab", controller, "reopen-last-tab", SettingsBindFlags.DEFAULT);
             settings.bind ("shortcut-close-tab", controller, "close-tab", SettingsBindFlags.DEFAULT);
             settings.bind ("shortcut-next-tab", controller, "next-tab", SettingsBindFlags.DEFAULT);
             settings.bind ("shortcut-previous-tab", controller, "previous-tab", SettingsBindFlags.DEFAULT);
@@ -157,6 +152,10 @@ namespace StillTerminal {
             settings.bind ("shortcut-preferences", controller, "preferences", SettingsBindFlags.DEFAULT);
             settings.bind ("shortcut-zoom-in", controller, "zoom-in", SettingsBindFlags.DEFAULT);
             settings.bind ("shortcut-zoom-out", controller, "zoom-out", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-select-all", controller, "select-all", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-tab-overview-toggle", controller, "tab-overview-toggle", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-tab-overview-open", controller, "tab-overview-open", SettingsBindFlags.DEFAULT);
+            settings.bind ("shortcut-tab-overview-close", controller, "tab-overview-close", SettingsBindFlags.DEFAULT);
         }
     }
 }
