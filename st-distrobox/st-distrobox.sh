@@ -12,6 +12,10 @@ set -u
 
 SCRIPT_NAME="st-distrobox"
 
+# Debug mode: 0=disabled, 1=enabled
+# Can be set via env ST_DISTROBOX_DEBUG or --debug flag
+debug_enabled="${ST_DISTROBOX_DEBUG:-0}"
+
 # Name style: underscores (default), as-is, or dashes.
 # Can be set via env ST_DISTROBOX_NAME_STYLE or --name-style flag.
 name_style="${ST_DISTROBOX_NAME_STYLE:-underscores}"
@@ -36,6 +40,7 @@ EOF
 
 log_err() { printf '%s\n' "$*" >&2; }
 status() { printf 'stillTerminal: %s\n' "$*" >&2; }
+dbg() { [[ "$debug_enabled" -eq 1 ]] && printf '[DEBUG] %s\n' "$*" >&2; }
 
 clear_screen() {
   if command -v clear >/dev/null 2>&1; then

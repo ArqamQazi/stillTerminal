@@ -67,6 +67,105 @@ namespace StillTerminal {
             editor_page.set_button(create_button);
             this.dialog.preferences_dialog.push_subpage(editor_page);
         }
+
+        private string normalize_container_name(string? raw_name) {
+            if (raw_name == null) {
+                return "";
+            }
+            string name = raw_name.strip();
+            if (name == "") {
+                return "";
+            }
+
+            name = name.replace(" ", "_");
+
+            string? style_env = GLib.Environment.get_variable("ST_DISTROBOX_NAME_STYLE");
+            string style = (style_env != null && style_env.strip() != "") ? style_env.strip().ascii_down() : "underscores";
+
+            switch (style) {
+                case "underscores":
+                    name = name.replace("-", "_");
+                    break;
+                case "dashes":
+                    name = name.replace("_", "-");
+                    break;
+                default:
+                    break;
+            }
+
+            return name;
+        }
+
+        private string build_container_name_from_profile(StProfile profile) {
+            string profile_id_slug = profile.id.replace(" ", "_");
+            string base_name = "stillterminal-" + profile_id_slug;
+            return this.normalize_container_name(base_name);
+        }
+
+        private string get_distrobox_container_name(StProfile profile) {
+            if (profile.type_params != null && profile.type_params.has_key("name")) {
+                string? custom_name = profile.type_params["name"];
+                string normalized_custom = this.normalize_container_name(custom_name);
+                if (normalized_custom != "") {
+                    return normalized_custom;
+                }
+            }
+            if (profile.type_params != null && profile.type_params.has_key("fallback_name")) {
+                string normalized_fallback = this.normalize_container_name(profile.type_params["fallback_name"]);
+                if (normalized_fallback != "") {
+                    return normalized_fallback;
+                }
+            }
+            return this.build_container_name_from_profile(profile);
+        }
+
+        private bool run_command(string[] argv) {
+            string? helper = GLib.Environment.get_variable("STILLTERMINAL_HOSTHELPER");
+            string[] full_argv;
+            if (helper != null && helper.strip() != "") {
+                full_argv = new string[argv.length + 1];
+                full_argv[0] = helper;
+                for (int i = 0; i < argv.length; i++) full_argv[i + 1] = argv[i];
+            } else {
+                full_argv = argv;
+            }
+
+            int status = 0;
+            string? stdout = null;
+            string? stderr = null;
+            try {
+                GLib.Process.spawn_sync(null, full_argv, null, GLib.SpawnFlags.SEARCH_PATH, null, out stdout, out stderr, out status);
+            } catch (GLib.SpawnError e) {
+                print("Failed to spawn command: %s\n", e.message);
+                return false;
+            }
+            if (status != 0) {
+                if (stderr != null && stderr.strip() != "") {
+                    print("Command failed: %s\n", stderr.strip());
+                }
+                return false;
+            }
+            return true;
+        }
+
+        private void stop_and_remove_distrobox_container(string container_name) {
+            if (container_name == null) {
+                return;
+            }
+            string name = this.normalize_container_name(container_name);
+            if (name == "") {
+                return;
+            }
+
+            bool stopped = this.run_command(new string[] {"distrobox", "stop", "--yes", name});
+            if (!stopped) {
+                print("Failed to stop distrobox container %s\n", name);
+            }
+            bool removed = this.run_command(new string[] {"distrobox", "rm", "-f", "--yes", name});
+            if (!removed) {
+                print("Failed to remove distrobox container %s\n", name);
+            }
+        }
         
         private void create_profile_button(StProfileEditorPage editor_page) {
             var profile = editor_page.get_edited_profile();
@@ -141,16 +240,7 @@ namespace StillTerminal {
                 this.save_profile_with_backup(edited);
 
                 if (edited.type == StProfileType.DISTROBOX && should_delete) {
-                    string old_name = "stillterminal-" + profile.id;
-                    if (profile.type_params != null && profile.type_params.has_key("name") && profile.type_params["name"].strip() != "")
-                        old_name = profile.type_params["name"].strip();
-                    string[] argv = {"distrobox", "rm", "-f", old_name};
-                    int status = 0; string? out_s = null; string? err_s = null;
-                    try {
-                        GLib.Process.spawn_sync(null, argv, null, GLib.SpawnFlags.SEARCH_PATH, null, out out_s, out err_s, out status);
-                    } catch (GLib.SpawnError e) {
-                        // Ignore failure; user can manage containers manually
-                    }
+                    this.stop_and_remove_distrobox_container(this.get_distrobox_container_name(profile));
                 }
 
                 regenerate_profile_list ();
@@ -165,8 +255,18 @@ namespace StillTerminal {
                 var remove_button = new Gtk.Button.with_label ("Remove Profile");
                 remove_button.add_css_class ("destructive-action");
                 remove_button.clicked.connect (() => {
-                    var file = File.new_for_path(profile.profile_file);
-                    try { file.delete(); } catch (Error e) { print ("Error deleting profile: %s\n".printf (e.message)); }
+                    if (profile.type == StProfileType.DISTROBOX) {
+                        this.stop_and_remove_distrobox_container(this.get_distrobox_container_name(profile));
+                    }
+
+                    if (profile.profile_file != null && profile.profile_file.strip() != "") {
+                        var file = File.new_for_path(profile.profile_file);
+                        try {
+                            file.delete();
+                        } catch (Error e) {
+                            print ("Error deleting profile: %s\n".printf (e.message));
+                        }
+                    }
 
                     // Clear stored SSH password if any
                     StSecretManager.clear_password(profile.id);

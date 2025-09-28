@@ -48,7 +48,14 @@ namespace StillTerminal {
 			// ACTIONS
 			var new_tab_action = new SimpleAction ("new-tab", null);
 			new_tab_action.activate.connect (() => {
-				this.present_new_tab_dialog ();
+				if (!this.new_tab_dialog_showing) {
+					this.new_tab_dialog_showing = true;
+					var dialog = new StNewTabDialog (this);
+					dialog.closed.connect(() => {
+						this.new_tab_dialog_showing = false;
+					});
+					dialog.present (this);
+				}
 			});
 			app.add_action (new_tab_action);
 
@@ -193,11 +200,11 @@ namespace StillTerminal {
                 var about = new Adw.AboutDialog ();
                 about.set_application_name ("stillTerminal");
                 about.set_application_icon ("io.stillhq.terminal");
-                about.set_developer_name ("stillHQ, LLC");
+                about.set_developer_name ("stillHQ");
                 about.set_website ("https://stillhq.io");
-                about.set_issue_url ("https://gitlab.com/stillhq/stillTerminal");
+                about.set_issue_url ("https://github.com/stillHQ/stillTerminal/issues");
                 about.set_version (StillTerminal.APP_VERSION);
-                about.set_copyright ("© 2025 stillHQ, LLC");
+                about.set_copyright ("© 2024 stillHQ");
                 string[] credits = { "VTE", "Libadwaita", "GTK" };
                 about.add_acknowledgement_section ("Credits", credits);
                 about.present (this);
@@ -229,14 +236,7 @@ namespace StillTerminal {
             });
             app.add_action (select_all_action);
 
-			this.settings.refresh_accelerators(app);
-
-			// When the last tab is closed, prompt to open a new one
-			this.tab_view.page_detached.connect ((p) => {
-				if (this.tab_view.get_n_pages () == 0) {
-					this.present_new_tab_dialog ();
-				}
-			});
+            this.settings.refresh_accelerators(app);
             
                     // SHORTCUTS
         this.add_controller (shortcuts.controller);
@@ -248,29 +248,14 @@ namespace StillTerminal {
         }
     
         public Adw.TabPage add_tab (StProfile profile) {
-			bool was_empty = (this.tab_view.get_n_pages () == 0);
-			var page = new StTerminalPage (this.settings, profile);
+            var page = new StTerminalPage (this.settings, profile);
             Adw.TabPage tab_page = this.tab_view.append (page);
             tab_page.title = profile.name;
             page.terminal.set_tab_page (tab_page);
             this.tab_view.set_selected_page (tab_page);
-		if (was_empty && this.tab_overview != null) {
-			this.tab_overview.set_open (false);
-		}
 			// Remember this as the most recently opened profile
 			this.settings.last_profile_id = profile.id;
     
-            // Auto-close when the terminal's child process exits
-            page.terminal.child_exited.connect ((status) => {
-                if (this.tab_view.get_n_pages () > 1) {
-                    // Close just this tab
-                    this.tab_view.close_page (tab_page);
-                } else {
-                    // Last tab: close the window/app
-                    this.close ();
-                }
-            });
-
             tab_page.notify["title"].connect (() => {
                 if (this.tab_view.get_n_pages () <= 1 && this.tab_view.get_selected_page () == tab_page) {
                     set_window_title (tab_page, page.terminal);
@@ -304,18 +289,6 @@ namespace StillTerminal {
                 terminal.profile.name + ": " + (term_title ?? "")
             );
         }
-
-		private void present_new_tab_dialog () {
-			if (this.new_tab_dialog_showing) {
-				return;
-			}
-			this.new_tab_dialog_showing = true;
-			var new_tab = new StNewTabDialog (this);
-			new_tab.dialog.closed.connect (() => {
-				this.new_tab_dialog_showing = false;
-			});
-			new_tab.present (this);
-		}
     
         public StTerminalPage get_current_terminal_page () {
             return this.tab_view.get_selected_page ().get_child () as StTerminalPage;

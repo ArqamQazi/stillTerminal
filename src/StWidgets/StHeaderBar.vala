@@ -10,6 +10,14 @@ namespace StillTerminal {
 
         public StHeaderBar (MainWindow main_window) {
             this.main_window = main_window;
+
+            // Connect to fullscreen state changes to update menu text
+            var fullscreen_action = main_window.get_application ().lookup_action ("fullscreen") as SimpleAction;
+            if (fullscreen_action != null) {
+                fullscreen_action.change_state.connect ((state) => {
+                    update_fullscreen_menu_item_label ();
+                });
+            }
             var window_handle = new Gtk.WindowHandle();
             this.add_css_class ("custom-headerbar");
             window_handle.add_css_class ("custom-headerbar");
@@ -125,7 +133,9 @@ namespace StillTerminal {
 
             // Window
             var window = new GLib.Menu ();
-            window.append ("Fullscreen", "app.fullscreen");
+            var fullscreen_item = new GLib.MenuItem ("Fullscreen", "app.fullscreen");
+            fullscreen_item.set_attribute_value ("toggle-type", new GLib.Variant.string ("checkmark"));
+            window.append_item (fullscreen_item);
             root.append_section (null, window);
 
             // App
@@ -152,6 +162,55 @@ namespace StillTerminal {
             this.box.append (button);
         }
 
+        private void update_fullscreen_menu_item_label () {
+            var fullscreen_action = this.main_window.get_application ().lookup_action ("fullscreen") as SimpleAction;
+            if (fullscreen_action == null) return;
 
+            bool is_fullscreen = fullscreen_action.get_state ().get_boolean ();
+            string label = is_fullscreen ? "Leave Fullscreen" : "Fullscreen";
+
+            // For a more robust solution, we could create a custom menu model
+            // that supports dynamic labels, but for now we'll rebuild the menu
+            // This is acceptable since menu rebuilding is not performance-critical
+            var root = new GLib.Menu ();
+
+            // Appearance radio group (preserve current state if possible)
+            var appearance = new GLib.Menu ();
+            var item_system = new GLib.MenuItem ("System", "app.color-scheme");
+            item_system.set_attribute_value ("target", new GLib.Variant.string ("system"));
+            appearance.append_item (item_system);
+
+            var item_light = new GLib.MenuItem ("Light", "app.color-scheme");
+            item_light.set_attribute_value ("target", new GLib.Variant.string ("light"));
+            appearance.append_item (item_light);
+
+            var item_dark = new GLib.MenuItem ("Dark", "app.color-scheme");
+            item_dark.set_attribute_value ("target", new GLib.Variant.string ("dark"));
+            appearance.append_item (item_dark);
+
+            root.append_section (null, appearance);
+
+            // Zoom controls
+            var zoom = new GLib.Menu ();
+            zoom.append ("Zoom In", "app.zoom-in");
+            zoom.append ("Zoom Out", "app.zoom-out");
+            zoom.append ("Reset Zoom", "app.zoom-reset");
+            root.append_section (null, zoom);
+
+            // Window section with updated fullscreen item
+            var window = new GLib.Menu ();
+            var fullscreen_item = new GLib.MenuItem (label, "app.fullscreen");
+            fullscreen_item.set_attribute_value ("toggle-type", new GLib.Variant.string ("checkmark"));
+            window.append_item (fullscreen_item);
+            root.append_section (null, window);
+
+            // App
+            var app_menu = new GLib.Menu ();
+            app_menu.append ("Preferences…", "app.preferences");
+            app_menu.append ("About stillTerminal", "app.about");
+            root.append_section (null, app_menu);
+
+            this.menu_button.set_menu_model (root as GLib.MenuModel);
+        }
     }
 }

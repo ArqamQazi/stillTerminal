@@ -502,6 +502,19 @@ namespace StillTerminal {
                 }
                 this.db_match_theme_switch.set_active(match);
                 this.update_color_scheme_row_sensitivity();
+
+                // Load advanced options
+                this.db_additional_packages_row.set_text(this.get_type_param_or_empty(profile, "additional_packages"));
+                this.db_additional_flags_row.set_text(this.get_type_param_or_empty(profile, "additional_flags"));
+                this.db_volumes_row.set_text(this.get_type_param_or_empty(profile, "volumes"));
+                this.db_init_switch.set_active(this.get_type_param_bool(profile, "init"));
+                this.db_root_switch.set_active(this.get_type_param_bool(profile, "root"));
+                this.db_pull_switch.set_active(this.get_type_param_bool(profile, "pull"));
+                this.db_home_row.set_text(this.get_type_param_or_empty(profile, "home"));
+                this.db_hostname_row.set_text(this.get_type_param_or_empty(profile, "hostname"));
+                this.db_platform_row.set_text(this.get_type_param_or_empty(profile, "platform"));
+                this.db_pre_init_hooks_row.set_text(this.get_type_param_or_empty(profile, "pre_init_hooks"));
+                this.db_init_hooks_row.set_text(this.get_type_param_or_empty(profile, "init_hooks"));
             }
 
             this.set_icon(profile.icon_name);
@@ -595,6 +608,26 @@ namespace StillTerminal {
             return edited_profile;
         }
 
+        private string get_type_param_or_empty(StProfile profile, string key) {
+            if (profile.type_params != null && profile.type_params.has_key(key)) {
+                string? value = profile.type_params[key];
+                if (value != null) {
+                    return value;
+                }
+            }
+            return "";
+        }
+
+        private bool get_type_param_bool(StProfile profile, string key) {
+            if (profile.type_params != null && profile.type_params.has_key(key)) {
+                string? value = profile.type_params[key];
+                if (value != null) {
+                    return value.ascii_down() == "true";
+                }
+            }
+            return false;
+        }
+
         // Compare only the keys that affect distrobox create
         private Gee.HashMap<string,string> filter_create_params(Gee.HashMap<string,string>? input) {
             var out = new Gee.HashMap<string,string>();
@@ -629,6 +662,20 @@ namespace StillTerminal {
             }
             if (this.container_group == null) return this.profile.type_params;
             var p = new Gee.HashMap<string,string>();
+            Gee.HashMap<string,string>? existing_params = this.profile.type_params;
+            if (existing_params != null) {
+                foreach (var entry in existing_params.entries) {
+                    if (entry.value != null) {
+                        p[entry.key] = entry.value;
+                    }
+                }
+            }
+            string[] managed_keys = {"image","additional_packages","additional_flags","volumes","init","root","pull","home","hostname","platform","pre_init_hooks","init_hooks","match_container_theme"};
+            foreach (string key in managed_keys) {
+                if (p.has_key(key)) {
+                    p.remove(key);
+                }
+            }
             // Resolve selected image
             int sel = (int) this.db_image_combo.get_selected();
             string img = "";
@@ -661,6 +708,21 @@ namespace StillTerminal {
             string platform = this.db_platform_row.get_text().strip(); if (platform != "") p["platform"] = platform;
             string pre_hooks = this.db_pre_init_hooks_row.get_text().strip(); if (pre_hooks != "") p["pre_init_hooks"] = pre_hooks;
             string init_hooks = this.db_init_hooks_row.get_text().strip(); if (init_hooks != "") p["init_hooks"] = init_hooks;
+
+            // Normalize container name: prefer explicit value, otherwise keep previous or default
+            string? explicit_name = null;
+            if (existing_params != null && existing_params.has_key("name")) {
+                explicit_name = existing_params["name"];
+            }
+            if (explicit_name != null && explicit_name.strip() != "") {
+                explicit_name = explicit_name.strip().replace(" ", "_");
+                p["name"] = explicit_name;
+            }
+
+            // Persist fallback container name based on profile id so deletion can re-derive it
+            if (!p.has_key("fallback_name")) {
+                p["fallback_name"] = "stillterminal-" + this.profile.id.replace(" ", "_");
+            }
 
             // Persist match container theme toggle
             // Persist match container theme toggle (explicitly store true/false)
