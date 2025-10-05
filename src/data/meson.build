@@ -14,7 +14,7 @@ install_data('io.stillhq.terminal.gschema.xml',
 install_data('../../data/io.stillhq.terminal.desktop',
   install_dir: get_option('datadir') / 'applications'
 )
-ll icon
+
 install_data('../../data/io.stillhq.terminal.svg',
   install_dir: get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps'
 )
