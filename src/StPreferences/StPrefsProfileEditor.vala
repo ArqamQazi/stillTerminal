@@ -210,6 +210,15 @@ namespace StillTerminal {
             filter.add_pattern ("id_rsa");
             filter.add_pattern ("id_ed25519");
             filter.add_pattern ("id_ecdsa");
+            
+            var all_files_filter = new Gtk.FileFilter ();
+            all_files_filter.name = "All Files";
+            all_files_filter.add_pattern ("*");
+            
+            var filters = new GLib.ListStore (typeof (Gtk.FileFilter));
+            filters.append (filter);
+            filters.append (all_files_filter);
+            this.ssh_key_dialog.set_filters (filters);
             this.ssh_key_dialog.set_default_filter (filter);
             
             this.ssh_auth_group.add (this.ssh_private_key_row);
