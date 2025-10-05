@@ -5,6 +5,20 @@ sources += gnome.compile_resources('resources',
   c_name: 'resources'
 )
 
+# Install GSchema
+install_data('io.stillhq.terminal.gschema.xml',
+  install_dir: get_option('datadir') / 'glib-2.0' / 'schemas'
+)
+
+# Install desktop file
+install_data('../../data/io.stillhq.terminal.desktop',
+  install_dir: get_option('datadir') / 'applications'
+)
+ll icon
+install_data('../../data/io.stillhq.terminal.svg',
+  install_dir: get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps'
+)
+
 # Install built-in color schemes to themes directory
 install_data([
   '../../data/schemes/Adwaita.json',
