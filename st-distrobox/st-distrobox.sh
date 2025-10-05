@@ -199,7 +199,12 @@ create_container() {
   if jq_tp_bool root; then args+=("--root"); fi
 
   local v
-  v=$(jq_tp_str home);      [[ -n "$v" ]] && args+=("--home" "$v")
+  v=$(jq_tp_str home)
+  if [[ -n "$v" ]]; then
+    # Expand tilde to home directory (prevent literal ~/ paths)
+    v="${v/#\~/$HOME}"
+    args+=("--home" "$v")
+  fi
   v="$explicit_hostname";  if [[ -n "$v" ]]; then v=$(unify_separators "$v"); args+=("--hostname" "$v"); fi
   v=$(jq_tp_str platform);  [[ -n "$v" ]] && args+=("--platform" "$v")
   if jq_tp_bool init; then args+=("--init"); fi
@@ -248,7 +253,12 @@ create_container_with_feedback() {
   if jq_tp_bool pull; then args+=("--pull"); fi
   if jq_tp_bool root; then args+=("--root"); fi
   local v
-  v=$(jq_tp_str home);      [[ -n "$v" ]] && args+=("--home" "$v")
+  v=$(jq_tp_str home)
+  if [[ -n "$v" ]]; then
+    # Expand tilde to home directory (prevent literal ~/ paths)
+    v="${v/#\~/$HOME}"
+    args+=("--home" "$v")
+  fi
   v=$(jq_tp_str hostname);  if [[ -n "$v" ]]; then v=$(unify_separators "$v"); args+=("--hostname" "$v"); fi
   v=$(jq_tp_str platform);  [[ -n "$v" ]] && args+=("--platform" "$v")
   if jq_tp_bool init; then args+=("--init"); fi

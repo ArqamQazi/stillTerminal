@@ -718,20 +718,23 @@ namespace StillTerminal {
             string pre_hooks = this.db_pre_init_hooks_row.get_text().strip(); if (pre_hooks != "") p["pre_init_hooks"] = pre_hooks;
             string init_hooks = this.db_init_hooks_row.get_text().strip(); if (init_hooks != "") p["init_hooks"] = init_hooks;
 
-            // Normalize container name: prefer explicit value, otherwise keep previous or default
+            // Explicitly store the container name that will be used
+            // This ensures deletion uses the exact same name that was used for creation
             string? explicit_name = null;
             if (existing_params != null && existing_params.has_key("name")) {
                 explicit_name = existing_params["name"];
             }
             if (explicit_name != null && explicit_name.strip() != "") {
+                // Keep explicit custom name if it was set
                 explicit_name = explicit_name.strip().replace(" ", "_");
                 p["name"] = explicit_name;
+            } else {
+                // Store the default computed name explicitly so deletion can find it
+                p["name"] = "stillterminal-" + this.profile.id.replace(" ", "_");
             }
 
-            // Persist fallback container name based on profile id so deletion can re-derive it
-            if (!p.has_key("fallback_name")) {
-                p["fallback_name"] = "stillterminal-" + this.profile.id.replace(" ", "_");
-            }
+            // Also persist fallback for compatibility
+            p["fallback_name"] = "stillterminal-" + this.profile.id.replace(" ", "_");
 
             // Persist match container theme toggle
             // Persist match container theme toggle (explicitly store true/false)

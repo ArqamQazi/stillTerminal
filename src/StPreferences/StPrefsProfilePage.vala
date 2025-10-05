@@ -148,15 +148,18 @@ namespace StillTerminal {
             return true;
         }
 
-        private void stop_and_remove_distrobox_container(string container_name) {
-            if (container_name == null) {
+        private void stop_and_remove_distrobox_container(string? container_name) {
+            if (container_name == null || container_name.strip() == "") {
+                print("Warning: Cannot delete container - invalid name\n");
                 return;
             }
             string name = this.normalize_container_name(container_name);
             if (name == "") {
+                print("Warning: Cannot delete container - normalized name is empty\n");
                 return;
             }
 
+            print("Stopping and removing distrobox container: %s\n", name);
             bool stopped = this.run_command(new string[] {"distrobox", "stop", "--yes", name});
             if (!stopped) {
                 print("Failed to stop distrobox container %s\n", name);
@@ -164,6 +167,8 @@ namespace StillTerminal {
             bool removed = this.run_command(new string[] {"distrobox", "rm", "-f", "--yes", name});
             if (!removed) {
                 print("Failed to remove distrobox container %s\n", name);
+            } else {
+                print("Successfully removed distrobox container: %s\n", name);
             }
         }
         
@@ -218,30 +223,49 @@ namespace StillTerminal {
             save_button.clicked.connect(() => {
                 var edited = profile_editor.get_edited_profile ();
                 bool should_delete = false;
+                string? old_container_name = null;
+                
                 // Detect create-time changes for distrobox profiles
                 if (profile.type == StProfileType.DISTROBOX) {
-                    // Compare current vs edited create-time subset
-                    Gee.HashMap<string,string> before = new Gee.HashMap<string,string>();
-                    if (profile.type_params != null) {
-                        foreach (var entry in profile.type_params.entries) before[entry.key] = entry.value;
+                    old_container_name = this.get_distrobox_container_name(profile);
+                    string new_container_name = this.get_distrobox_container_name(edited);
+                    
+                    // If the container name changed (due to profile rename), we need to delete the old container
+                    if (old_container_name != new_container_name) {
+                        should_delete = true;
+                        print("Profile/container name changed from '%s' to '%s', will recreate container\n", 
+                              old_container_name, new_container_name);
                     }
-                    Gee.HashMap<string,string> after = new Gee.HashMap<string,string>();
-                    if (edited.type_params != null) {
-                        foreach (var entry in edited.type_params.entries) after[entry.key] = entry.value;
+                    
+                    // Also check if any create-time options changed
+                    if (!should_delete) {
+                        Gee.HashMap<string,string> before = new Gee.HashMap<string,string>();
+                        if (profile.type_params != null) {
+                            foreach (var entry in profile.type_params.entries) before[entry.key] = entry.value;
+                        }
+                        Gee.HashMap<string,string> after = new Gee.HashMap<string,string>();
+                        if (edited.type_params != null) {
+                            foreach (var entry in edited.type_params.entries) after[entry.key] = entry.value;
+                        }
+                        string[] keys = {"image","additional_packages","additional_flags","volumes","init","root","pull","home","hostname","platform","pre_init_hooks","init_hooks"};
+                        foreach (string k in keys) {
+                            string bv = before.has_key(k) ? (before[k] ?? "") : "";
+                            string av = after.has_key(k) ? (after[k] ?? "") : "";
+                            if (bv != av) { 
+                                should_delete = true;
+                                print("Container option '%s' changed, will recreate container\n", k);
+                                break; 
+                            }
+                        }
                     }
-                    string[] keys = {"image","additional_packages","additional_flags","volumes","init","root","pull","home","hostname","platform","pre_init_hooks","init_hooks"};
-                    foreach (string k in keys) {
-                        string bv = before.has_key(k) ? (before[k] ?? "") : "";
-                        string av = after.has_key(k) ? (after[k] ?? "") : "";
-                        if (bv != av) { should_delete = true; break; }
-                    }
+                }
+
+                // Delete old container BEFORE saving the new profile
+                if (should_delete && old_container_name != null) {
+                    this.stop_and_remove_distrobox_container(old_container_name);
                 }
 
                 this.save_profile_with_backup(edited);
-
-                if (edited.type == StProfileType.DISTROBOX && should_delete) {
-                    this.stop_and_remove_distrobox_container(this.get_distrobox_container_name(profile));
-                }
 
                 regenerate_profile_list ();
                 this.dialog.preferences_dialog.pop_subpage ();

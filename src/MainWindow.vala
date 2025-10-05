@@ -229,14 +229,14 @@ namespace StillTerminal {
             });
             app.add_action (select_all_action);
 
-			this.settings.refresh_accelerators(app);
+		this.settings.refresh_accelerators(app);
 
-			// When the last tab is closed, prompt to open a new one
-			this.tab_view.page_detached.connect ((p) => {
-				if (this.tab_view.get_n_pages () == 0) {
-					this.present_new_tab_dialog ();
-				}
-			});
+		// When the last tab is closed, close the application
+		this.tab_view.page_detached.connect ((p) => {
+			if (this.tab_view.get_n_pages () == 0) {
+				this.close ();
+			}
+		});
             
                     // SHORTCUTS
         this.add_controller (shortcuts.controller);
@@ -248,20 +248,20 @@ namespace StillTerminal {
         }
     
         public Adw.TabPage add_tab (StProfile profile) {
-			bool was_empty = (this.tab_view.get_n_pages () == 0);
-			var page = new StTerminalPage (this.settings, profile);
+		bool was_empty = (this.tab_view.get_n_pages () == 0);
+		var page = new StTerminalPage (this.settings, profile);
             Adw.TabPage tab_page = this.tab_view.append (page);
             tab_page.title = profile.name;
             page.terminal.set_tab_page (tab_page);
             this.tab_view.set_selected_page (tab_page);
-		if (was_empty && this.tab_overview != null) {
-			this.tab_overview.set_open (false);
-		}
-			// Remember this as the most recently opened profile
-			this.settings.last_profile_id = profile.id;
+	if (was_empty && this.tab_overview != null) {
+		this.tab_overview.set_open (false);
+	}
+		// Remember this as the most recently opened profile
+		this.settings.last_profile_id = profile.id;
     
             // Auto-close when the terminal's child process exits
-            page.terminal.child_exited.connect ((status) => {
+            ulong child_exited_handler_id = page.terminal.child_exited.connect ((status) => {
                 if (this.tab_view.get_n_pages () > 1) {
                     // Close just this tab
                     this.tab_view.close_page (tab_page);
@@ -271,14 +271,26 @@ namespace StillTerminal {
                 }
             });
 
+            // Disconnect signal handlers when the tab is closed to prevent use-after-free
+            tab_page.notify["selected"].connect (() => {
+                set_window_title (tab_page, page.terminal);
+            });
+            
             tab_page.notify["title"].connect (() => {
                 if (this.tab_view.get_n_pages () <= 1 && this.tab_view.get_selected_page () == tab_page) {
                     set_window_title (tab_page, page.terminal);
                 }
             });
-    
-            tab_page.notify["selected"].connect (() => {
-                set_window_title (tab_page, page.terminal);
+            
+            // Clean up signal handlers when page is being closed
+            ulong page_detached_handler = 0;
+            page_detached_handler = this.tab_view.page_detached.connect ((detached_page) => {
+                if (detached_page == tab_page) {
+                    // Disconnect the child_exited handler to prevent crashes
+                    page.terminal.disconnect (child_exited_handler_id);
+                    // Disconnect this cleanup handler itself
+                    this.tab_view.disconnect (page_detached_handler);
+                }
             });
     
             return tab_page;

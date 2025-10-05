@@ -92,7 +92,17 @@ namespace StDistrobox {
             if (tp != null) {
                 if (tp.has_key("pull") && tp["pull"] == "true") argv_list.add("--pull");
                 if (tp.has_key("root") && tp["root"] == "true") argv_list.add("--root");
-                if (tp.has_key("home")) { argv_list.add("--home"); argv_list.add(tp["home"]); }
+                if (tp.has_key("home")) {
+                    string home_path = tp["home"];
+                    // Expand tilde to home directory (shell expansion doesn't happen with spawn_sync)
+                    if (home_path.has_prefix("~/")) {
+                        home_path = GLib.Environment.get_home_dir() + home_path.substring(1);
+                    } else if (home_path == "~") {
+                        home_path = GLib.Environment.get_home_dir();
+                    }
+                    argv_list.add("--home");
+                    argv_list.add(home_path);
+                }
                 if (tp.has_key("hostname")) { argv_list.add("--hostname"); argv_list.add(tp["hostname"]); }
                 if (tp.has_key("platform")) { argv_list.add("--platform"); argv_list.add(tp["platform"]); }
                 if (tp.has_key("init") && tp["init"] == "true") argv_list.add("--init");
