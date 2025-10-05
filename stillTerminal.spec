@@ -4,8 +4,8 @@ Release:        1%{?dist}
 Summary:        A tabbed terminal emulator for stillOS
 
 License:        GPL-3.0-or-later
-URL:            https://github.com/stillhq/stillTerminal
-Source0:        https://github.com/stillhq/stillTerminal/archive/v%{version}/%{name}-%{version}.tar.gz
+URL:            https://gitlab.com/stillhq/stillTerminal/
+Source0:        https://gitlab.com/stillhq/stillTerminal/-/archive/main/stillTerminal-main.tar.gz
 
 BuildRequires:  meson >= 0.56.0
 BuildRequires:  ninja-build
@@ -35,7 +35,7 @@ It features custom themes and profiles, with support for SSH
 and distrobox container integration.
 
 %prep
-%autosetup -n %{name}-%{version}
+%autosetup -n %{name}-main
 
 %build
 %meson
