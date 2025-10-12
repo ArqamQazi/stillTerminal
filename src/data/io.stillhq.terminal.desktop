@@ -1,0 +1,17 @@
+[Desktop Entry]
+Name=stillTerminal
+GenericName=Terminal
+Comment=A modern terminal emulator for stillOS and the container age.
+Exec=stillTerminal
+Icon=io.stillhq.terminal
+Terminal=false
+Type=Application
+Categories=System;TerminalEmulator;
+Keywords=terminal;console;shell;command;prompt;cmd;bash;zsh;
+StartupNotify=true
+StartupWMClass=io.stillhq.terminal
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=stillTerminal

@@ -217,17 +217,22 @@ namespace StillTerminal {
                 return;
             }
 
-            // Slug helpers
+            // Slug helpers - add timestamp to ensure uniqueness
             string slug_for_id = name.ascii_down().replace (" ", "_");
-            string slug_for_container = name.ascii_down().replace (" ", "-");
+            int64 timestamp = GLib.get_real_time() / 1000000;
+            slug_for_id = "%s_%ld".printf(slug_for_id, (long)timestamp);
+            
+            string slug_for_container = name.ascii_down().replace (" ", "_");
+            // Also make container name unique with timestamp
+            string container_name = "sterm_%s_%ld".printf(slug_for_container, (long)timestamp);
 
             var params = new Gee.HashMap<string,string>();
             string image = this.image_row.get_text().strip();
             params["image"] = image != "" ? image : "docker.io/library/ubuntu:latest";
             string extra = this.extra_args_row.get_text().strip();
             if (extra != "") params["enter_args"] = extra;
-            // Container name derived from profile name
-            params["name"] = "stillterminal-" + slug_for_container;
+            // Container name derived from profile name with timestamp for uniqueness
+            params["name"] = container_name;
 
             // Build profile
             var profile = new StProfile(

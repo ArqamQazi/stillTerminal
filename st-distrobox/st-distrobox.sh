@@ -146,7 +146,7 @@ unify_separators() {
 
 name=$(jq_tp_str name)
 image=$(jq_tp_str image)
-[[ -n "$name" ]] || name="stillterminal-$profile_id"
+[[ -n "$name" ]] || name="sterm_$profile_id"
 # Apply name style normalization (also affects prefix)
 name=$(unify_separators "$name")
 [[ -n "$image" ]] || image="docker.io/library/ubuntu:latest"

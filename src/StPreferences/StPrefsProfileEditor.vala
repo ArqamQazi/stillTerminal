@@ -591,8 +591,25 @@ namespace StillTerminal {
             string? ssh_user = this.ssh_user_row.get_text().strip() != "" ? this.ssh_user_row.get_text().strip() : null;
             int ssh_port = (int)this.ssh_port_row.get_value();
             string? ssh_private_key_path = this.profile.ssh_private_key_path;
+            
+            // Generate profile ID: use existing ID if editing, or create new unique ID
+            string profile_id;
+            if (this.profile.id != null && this.profile.id.strip() != "") {
+                // Editing existing profile - keep the same ID
+                profile_id = this.profile.id;
+            } else {
+                // New profile - generate unique ID from name with timestamp
+                string name_slug = this.name_row.get_text().strip().ascii_down().replace(" ", "_");
+                if (name_slug == "") {
+                    name_slug = "profile";
+                }
+                // Add timestamp to ensure uniqueness
+                int64 timestamp = GLib.get_real_time() / 1000000;
+                profile_id = "%s_%ld".printf(name_slug, (long)timestamp);
+            }
+            
             var edited_profile = new StProfile (
-                this.name_row.get_text ().strip().ascii_down().replace (" ", "_"),
+                profile_id,
                 this.name_row.get_text ().strip(),
                 selected_color_scheme,
                 this.working_directory_row.get_text(),
@@ -600,7 +617,7 @@ namespace StillTerminal {
                 this.profile.profile_file,
                 this.profile.icon_name,  // This should be the current icon from editor
                 this.profile.type,
-                this.collect_type_params(),
+                this.collect_type_params(profile_id),
                 this.profile.type_subtitle,
                 ssh_host, ssh_user, ssh_port, ssh_private_key_path,
                 this.profile.ssh_auth_method, this.profile.ssh_strict_host_key_checking, this.ssh_extra_options_row.get_text()
@@ -662,10 +679,10 @@ namespace StillTerminal {
 
         public string get_container_name_for(StProfile p) {
             if (p.type_params != null && p.type_params.has_key("name") && p.type_params["name"].strip() != "") return p.type_params["name"].strip();
-            return "stillterminal-" + p.id;
+            return "sterm_" + p.id;
         }
 
-        private Gee.HashMap<string,string>? collect_type_params() {
+        private Gee.HashMap<string,string>? collect_type_params(string profile_id) {
             if (this.profile.type != StProfileType.DISTROBOX) {
                 return this.profile.type_params; // unchanged for other types
             }
@@ -730,11 +747,11 @@ namespace StillTerminal {
                 p["name"] = explicit_name;
             } else {
                 // Store the default computed name explicitly so deletion can find it
-                p["name"] = "stillterminal-" + this.profile.id.replace(" ", "_");
+                p["name"] = "sterm_" + profile_id.replace(" ", "_");
             }
 
             // Also persist fallback for compatibility
-            p["fallback_name"] = "stillterminal-" + this.profile.id.replace(" ", "_");
+            p["fallback_name"] = "sterm_" + profile_id.replace(" ", "_");
 
             // Persist match container theme toggle
             // Persist match container theme toggle (explicitly store true/false)

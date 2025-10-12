@@ -147,7 +147,7 @@ namespace StDistrobox {
         if (p == null) { stderr.printf("st-distrobox: unable to load profile\n"); return 1; }
         if (p.type.ascii_down() != "distrobox") { stderr.printf("st-distrobox: not a distrobox profile\n"); return 1; }
 
-        string name = (p.type_params != null && p.type_params.has_key("name") && p.type_params["name"].strip() != "") ? p.type_params["name"].strip() : ("stillterminal-" + p.id);
+        string name = (p.type_params != null && p.type_params.has_key("name") && p.type_params["name"].strip() != "") ? p.type_params["name"].strip() : ("sterm_" + p.id);
         string image = (p.type_params != null && p.type_params.has_key("image") && p.type_params["image"].strip() != "") ? p.type_params["image"].strip() : "docker.io/library/ubuntu:latest";
         if (debug) stderr.printf("[st-distrobox] profile id=%s name=%s image=%s\n", p.id, name, image);
 

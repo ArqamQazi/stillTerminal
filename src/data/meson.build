@@ -11,7 +11,7 @@ install_data('io.stillhq.terminal.gschema.xml',
 )
 
 # Install desktop file
-install_data('../../data/io.stillhq.terminal.desktop',
+install_data('io.stillhq.terminal.desktop',
   install_dir: get_option('datadir') / 'applications'
 )
 

@@ -1,4 +1,4 @@
-Name:           stillTerminal
+Name:           still-terminal
 Version:        0.0.1
 Release:        1%{?dist}
 Summary:        A tabbed terminal emulator for stillOS

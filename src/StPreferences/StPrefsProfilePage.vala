@@ -98,7 +98,7 @@ namespace StillTerminal {
 
         private string build_container_name_from_profile(StProfile profile) {
             string profile_id_slug = profile.id.replace(" ", "_");
-            string base_name = "stillterminal-" + profile_id_slug;
+            string base_name = "sterm_" + profile_id_slug;
             return this.normalize_container_name(base_name);
         }
 
