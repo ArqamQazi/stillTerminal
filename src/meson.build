@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 executable(
-  'stillTerminal',
+  'still-terminal',
   sources,
   dependencies: dependencies,
   install: true

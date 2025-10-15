@@ -46,7 +46,7 @@ and distrobox container integration.
 
 %files
 %doc README.md
-%{_bindir}/stillTerminal
+%{_bindir}/still-terminal
 %{_datadir}/stillTerminal/
 %{_datadir}/applications/io.stillhq.terminal.desktop
 %{_datadir}/glib-2.0/schemas/io.stillhq.terminal.gschema.xml
