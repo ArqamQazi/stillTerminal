@@ -35,7 +35,7 @@ It features custom themes and profiles, with support for SSH
 and distrobox container integration.
 
 %prep
-%autosetup -n %{name}-main
+%autosetup -n stillTerminal-main
 
 %build
 %meson
