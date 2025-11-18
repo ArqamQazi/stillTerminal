@@ -1,30 +1,11 @@
 namespace StillTerminal {
-    // Different from StProfileType to allow premade distrobox and custom distrobox 
     public enum CreationType {
-        SYSTEM, PREMADE_DISTROBOX, SSH, CUSTOM_DISTROBOX;
-    }
-    
-    // These are only used for creating profiles, not for the profiles themselves
-    public class StDistroBoxProfile {
-        public string image_name;
-        public bool use_sdbm; // Still DistroBox Manager
-    }
-    
-    // These are only used for creating profiles, not for the profiles themselves
-    public class StSshProfile {
-        public string url;
-        public string username;
-        public string password;
-        public string key_file;
-        public string port;
+        SYSTEM, SSH, CUSTOM_DISTROBOX;
     }
 
     public class StProfileCreatorTypePage : Adw.NavigationPage {
         StPrefsDialog dialog;
         Adw.PreferencesGroup pref_group;
-        Adw.ActionRow system_row;
-        // Removed unused rows to avoid warnings
-        Adw.ActionRow custom_distrobox_row;
         CreationType selected_option;
 
         public StProfileCreatorTypePage (StPrefsDialog dialog) {
@@ -47,7 +28,7 @@ namespace StillTerminal {
             this.set_child(box);
 
             Gtk.CheckButton? last_button = null;
-            this.system_row = add_check_button(
+            add_check_button(
                 out last_button,
                 "System Profile", "Use the system profile",
                 "utilities-terminal-symbolic",
@@ -59,22 +40,10 @@ namespace StillTerminal {
             more_soon.set_subtitle("We're working on adding more profile types");
             this.pref_group.add (more_soon);
 
-            //  Unused options kept as comments for future implementation
-            //      out last_button,
-            //      "Easy Development Environment", "Setup a quick development environment using DistroBox",
-            //      "utilities-terminal-symbolic",
-            //      CreationType.PREMADE_DISTROBOX, last_button
-            //  );
-            //  this.ssh_row = add_check_button(
-            //      out last_button,
-            //      "SSH Profile", "Use an SSH profile",
-            //      "utilities-terminal-symbolic",
-            //      CreationType.SSH, last_button
-            //  );
-            this.custom_distrobox_row = add_check_button(
+            add_check_button(
                 out last_button,
                 "Custom Distrobox Profile", "Create a custom distrobox profile",
-                "utilities-terminal-symbolic",
+                "container-symbolic",
                 CreationType.CUSTOM_DISTROBOX, last_button
             );
 
@@ -98,7 +67,8 @@ namespace StillTerminal {
             Adw.ActionRow row = new Adw.ActionRow();
             row.set_title(title);
             row.set_subtitle(subtitle);
-            Gtk.Image icon = new Gtk.Image.from_icon_name (icon_name);
+            // All icons are now loaded from the icon theme
+            Gtk.Image icon = new Gtk.Image.from_icon_name(icon_name);
             row.add_prefix(icon);
             button = new Gtk.CheckButton ();
             button.valign = Gtk.Align.CENTER;
@@ -120,11 +90,7 @@ namespace StillTerminal {
         public void next_page () {
             switch (this.selected_option) {
                 case CreationType.SYSTEM:
-                this.push_profile_editor (StProfile.new_blank_profile ());
-                    break;
-                case CreationType.PREMADE_DISTROBOX:
-                    break;
-                case CreationType.SSH:
+                    this.push_profile_editor (StProfile.new_blank_profile ());
                     break;
                 case CreationType.CUSTOM_DISTROBOX:
                     var page = new StCustomDistroboxCreatorPage(this.dialog);
@@ -234,7 +200,7 @@ namespace StillTerminal {
             // Container name derived from profile name with timestamp for uniqueness
             params["name"] = container_name;
 
-            // Build profile
+            // Build profile (default container icon: Ubuntu)
             var profile = new StProfile(
                 slug_for_id,
                 name,
@@ -242,7 +208,7 @@ namespace StillTerminal {
                 GLib.Environment.get_home_dir(),
                 null,
                 null,
-                null,
+                "ubuntu-symbolic",
                 StProfileType.DISTROBOX,
                 params,
                 "Container Environment"
@@ -283,8 +249,8 @@ namespace StillTerminal {
             Gtk.CheckButton? last_button = null;
             add_check_button(out last_button, "System Profile", "Use the system profile", "utilities-terminal-symbolic", StProfileType.SYSTEM, null);
             last_button.set_active(true);
-            add_check_button(out last_button, "Container Profile", "Use a container (Distrobox)", "application-x-container-symbolic", StProfileType.DISTROBOX, last_button);
-            add_check_button(out last_button, "SSH Profile", "Connect to a remote server", "network-server-symbolic", StProfileType.SSH, last_button);
+            add_check_button(out last_button, "Container Profile", "Use a container (Distrobox)", "container-symbolic", StProfileType.DISTROBOX, last_button);
+            add_check_button(out last_button, "SSH Profile", "Connect to a remote server", "remote-terminal-symbolic", StProfileType.SSH, last_button);
 
             // No explicit Cancel; dialog provides a back button
 

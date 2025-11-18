@@ -49,7 +49,6 @@ namespace StillTerminal {
             settings.bind ("cell-height", vte, "cell_height_scale", SettingsBindFlags.DEFAULT);
             settings.bind ("cell-width", vte, "cell_width_scale", SettingsBindFlags.DEFAULT);
             settings.bind ("bold-is-bright", vte, "bold_is_bright", SettingsBindFlags.DEFAULT);
-            settings.bind ("scrollback-limit", vte, "scrollback_lines", SettingsBindFlags.DEFAULT);
     
             settings.bind ("padding", vte, "margin-start", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", vte, "margin-end", SettingsBindFlags.DEFAULT);

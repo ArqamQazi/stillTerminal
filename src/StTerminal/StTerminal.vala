@@ -1,5 +1,7 @@
 namespace StillTerminal {
     public class StTerminal : Vte.Terminal {
+        public signal void press_any_key_close_requested ();
+
         public StProfile profile;
         public Vte.Terminal vte;
         public StSettings settings;
@@ -8,11 +10,16 @@ namespace StillTerminal {
         public Adw.TabPage? tab_page;
         private bool process_running = false;
         private GLib.Pid shell_pid = -1;
+        private Gtk.EventControllerKey? close_prompt_controller = null;
+        private bool waiting_for_close_key = false;
 
         public StTerminal (StSettings settings, StProfile profile) {
             Object ();
             this.settings = settings;
             this.profile = profile;
+            int scrollback = profile.get_scrollback_lines_setting ();
+            if (scrollback < -1) scrollback = StProfile.DEFAULT_SCROLLBACK_LINES;
+            this.set_scrollback_lines (scrollback);
 
             this.style_manager = Adw.StyleManager.get_default ();
 
@@ -60,6 +67,11 @@ namespace StillTerminal {
                     if (error == null) {
                         this.shell_pid = pid;
                         this.process_running = true;
+                    } else {
+                        this.process_running = false;
+                        this.shell_pid = -1;
+                        string failure = "Failed to start profile \"%s\": %s".printf (this.profile.name, error.message);
+                        show_press_any_key_prompt (failure);
                     }
                 }
             );
@@ -240,6 +252,7 @@ namespace StillTerminal {
          */
         private void on_child_exited (int status) {
             this.process_running = false;
+            show_press_any_key_prompt (describe_exit_status (status));
         }
 
         public bool has_running_process () {
@@ -282,6 +295,48 @@ namespace StillTerminal {
             }
 
             return false;
+        }
+
+        private void ensure_close_prompt_controller () {
+            if (this.close_prompt_controller != null) {
+                return;
+            }
+            this.close_prompt_controller = new Gtk.EventControllerKey ();
+            this.add_controller (this.close_prompt_controller);
+            this.close_prompt_controller.key_pressed.connect ((keyval, keycode, state) => {
+                if (!this.waiting_for_close_key) {
+                    return false;
+                }
+                this.waiting_for_close_key = false;
+                this.press_any_key_close_requested ();
+                return true;
+            });
+        }
+
+        private string describe_exit_status (int status) {
+            if (status == 0) {
+                return "Process exited normally.";
+            }
+            return "Process exited with status %d.".printf (status);
+        }
+
+        private void show_press_any_key_prompt (string? message) {
+            ensure_close_prompt_controller ();
+            if (this.waiting_for_close_key) {
+                return;
+            }
+            this.waiting_for_close_key = true;
+            this.set_can_focus (true);
+            this.grab_focus ();
+
+            string prompt = "\r\n";
+            if (message != null && message.strip () != "") {
+                prompt += message.strip ();
+                prompt += "\r\n";
+            }
+            prompt += "Press any key to close this tab...";
+            prompt += "\r\n";
+            this.feed (prompt.data);
         }
     }
 }

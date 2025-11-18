@@ -17,6 +17,7 @@ public class StillTerminal.App : Adw.Application {
             var icon_theme = Gtk.IconTheme.get_for_display (display);
             icon_theme.add_resource_path ("/io/stillhq/terminal/icons");
             icon_theme.add_resource_path ("/io/stillhq/terminal/icons/symbolic");
+            icon_theme.add_resource_path ("/io/stillhq/terminal/icons/symbolic/scalable/apps");
             icon_theme.add_resource_path ("/io/stillhq/terminal/icons/symbolic/scalable/actions");
         }
         

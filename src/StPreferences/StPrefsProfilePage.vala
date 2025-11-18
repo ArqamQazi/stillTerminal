@@ -12,7 +12,7 @@ namespace StillTerminal {
         public StPrefsProfilePage (StPrefsDialog dialog) {
             this.dialog = dialog;
             this.set_title ("Profiles");
-            this.set_icon_name ("utilities-terminal-symbolic");
+            this.set_icon_name ("container-terminal-symbolic");
 
             this.setup_profile_groups();
             this.regenerate_profile_list ();
@@ -422,11 +422,17 @@ namespace StillTerminal {
             var icon_image = new Gtk.Image();
             icon_image.pixel_size = 32;
             
-            // Check if it's a Linux distro icon from resources
+            // Check if it's a Linux distro icon (GTK will find it in registered icon theme paths)
             if (profile.icon_name != null && profile.icon_name in AVAILABLE_ICONS) {
-                icon_image.set_from_resource(@"/io/stillhq/terminal/icons/$(profile.icon_name).svg");
+                icon_image.set_from_icon_name(profile.icon_name);
+            } else if (profile.type == StProfileType.DISTROBOX) {
+                // Container profiles: use our custom symbolic icon (GTK will apply theme styling)
+                icon_image.set_from_icon_name("container-symbolic");
+            } else if (profile.type == StProfileType.SSH) {
+                // SSH profiles: use our custom symbolic icon (GTK will apply theme styling)
+                icon_image.set_from_icon_name("remote-terminal-symbolic");
             } else {
-                // Use default terminal icon
+                // System/default profiles: same terminal icon used elsewhere in settings
                 icon_image.set_from_icon_name("utilities-terminal-symbolic");
             }
             

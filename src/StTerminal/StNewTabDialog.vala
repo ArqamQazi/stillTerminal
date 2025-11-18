@@ -152,13 +152,18 @@ namespace StillTerminal {
             var icon_image = new Gtk.Image();
             icon_image.pixel_size = 32;
             
-            // Check if it's a Linux distro icon from resources
+            // Check if it's a Linux distro icon (GTK will find it in registered icon theme paths)
             if (profile.icon_name != null && profile.icon_name in AVAILABLE_ICONS) {
-                icon_image.set_from_resource(@"/io/stillhq/terminal/icons/$(profile.icon_name).svg");
+                icon_image.set_from_icon_name(profile.icon_name);
+            } else if (profile.type == StProfileType.DISTROBOX) {
+                // Container profiles: use our custom symbolic icon (GTK will apply theme styling)
+                icon_image.set_from_icon_name("container-symbolic");
+            } else if (profile.type == StProfileType.SSH) {
+                // SSH profiles: use our custom symbolic icon (GTK will apply theme styling)
+                icon_image.set_from_icon_name("remote-terminal-symbolic");
             } else {
-                // Use fallback based on profile type
-                string fallback_icon = this.get_fallback_icon_for_type(profile.type);
-                icon_image.set_from_icon_name(fallback_icon);
+                // System/default profiles: same terminal icon used elsewhere in settings
+                icon_image.set_from_icon_name("utilities-terminal-symbolic");
             }
             
             return icon_image;
@@ -173,19 +178,6 @@ namespace StillTerminal {
                 }
             }
             return false;
-        }
-        
-        private string get_fallback_icon_for_type(StProfileType type) {
-            switch (type) {
-                case StProfileType.SYSTEM:
-                    return "computer-symbolic";
-                case StProfileType.DISTROBOX:
-                    return "application-x-container-symbolic";
-                case StProfileType.SSH:
-                    return "network-server-symbolic";
-                default:
-                    return "utilities-terminal-symbolic";
-            }
         }
         
         private void add_create_profile_options() {
@@ -280,7 +272,7 @@ namespace StillTerminal {
             var container_row = new Adw.ActionRow();
             container_row.set_title("Container Profile");
             container_row.set_subtitle("Use a container (Distrobox)");
-            var container_icon = new Gtk.Image.from_icon_name("application-x-container-symbolic");
+            var container_icon = new Gtk.Image.from_icon_name("container-symbolic");
             container_row.add_prefix(container_icon);
             var container_button = new Gtk.CheckButton();
             container_button.valign = Gtk.Align.CENTER;
@@ -295,7 +287,8 @@ namespace StillTerminal {
             var ssh_row = new Adw.ActionRow();
             ssh_row.set_title("SSH Profile");
             ssh_row.set_subtitle("Connect to a remote server");
-            var ssh_icon = new Gtk.Image.from_icon_name("network-server-symbolic");
+            // Use our bundled remote-terminal icon for SSH
+            var ssh_icon = new Gtk.Image.from_icon_name("remote-terminal-symbolic");
             ssh_row.add_prefix(ssh_icon);
             var ssh_button = new Gtk.CheckButton();
             ssh_button.valign = Gtk.Align.CENTER;

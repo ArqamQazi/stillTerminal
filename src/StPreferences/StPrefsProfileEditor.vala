@@ -11,6 +11,7 @@ namespace StillTerminal {
         Adw.EntryRow working_directory_row;
         Gtk.FileDialog file_dialog;
         Adw.EntryRow spawn_command_row;
+        Adw.SpinRow scrollback_row;
         Adw.ActionRow icon_row;
         Gtk.Label icon_preview_label;
         Gtk.Image icon_preview_image;
@@ -57,7 +58,7 @@ namespace StillTerminal {
             preferences_page.add (this.pref_group);
 
             this.ssh_auth_group = new Adw.PreferencesGroup ();
-            this.ssh_auth_group.set_title ("SSH Authentication");
+            this.ssh_auth_group.set_title ("SSH Authentication (Optional)");
             preferences_page.add (this.ssh_auth_group);
 
             this.ssh_options_group = new Adw.PreferencesGroup ();
@@ -127,6 +128,15 @@ namespace StillTerminal {
             this.spawn_command_row.changed.connect (() => { this.on_field_changed(); this.update_ssh_command_preview(); });
             this.pref_group.add (this.spawn_command_row);
 
+            var scrollback_adjustment = new Gtk.Adjustment (StProfile.DEFAULT_SCROLLBACK_LINES, -1, 1000000, 100, 1000, 0);
+            this.scrollback_row = new Adw.SpinRow (scrollback_adjustment, 0, 0);
+            this.scrollback_row.set_title ("Scrollback Lines");
+            this.scrollback_row.set_subtitle ("Set -1 for unlimited history");
+            this.scrollback_row.set_digits (0);
+            this.scrollback_row.set_numeric (true);
+            this.scrollback_row.changed.connect (this.on_field_changed);
+            this.pref_group.add (this.scrollback_row);
+
             // SSH-specific fields (only shown for SSH profiles)
             this.setup_ssh_fields();
 
@@ -191,8 +201,12 @@ namespace StillTerminal {
             clear_key_button.set_valign(Gtk.Align.CENTER);
             clear_key_button.set_tooltip_text("Clear and use default identity");
             clear_key_button.clicked.connect(() => {
-                this.profile.ssh_private_key_path = null;
-                this.ssh_private_key_row.set_subtitle("");
+                // Clear stored key path in type_params (if present)
+                if (this.profile.type_params != null && this.profile.type_params.has_key("ssh_private_key_path")) {
+                    this.profile.type_params.unset("ssh_private_key_path");
+                }
+                // Restore the default subtitle text so the row doesn't look empty
+                this.ssh_private_key_row.set_subtitle("Select a private key file (optional)");
                 this.on_field_changed();
                 this.update_ssh_command_preview();
             });
@@ -243,7 +257,8 @@ namespace StillTerminal {
             // Extra options input
             this.ssh_extra_options_row = new Adw.EntryRow();
             this.ssh_extra_options_row.set_title("Extra SSH Options (Advanced)");
-            this.ssh_extra_options_row.set_text(this.profile.ssh_extra_options ?? "");
+            // Initialize from type_params (if any)
+            this.ssh_extra_options_row.set_text(this.get_type_param_or_empty(this.profile, "ssh_extra_options"));
             this.ssh_extra_options_row.changed.connect(() => { this.on_field_changed(); this.update_ssh_command_preview(); });
             this.ssh_options_group.add(this.ssh_extra_options_row);
 
@@ -311,11 +326,22 @@ namespace StillTerminal {
             // Image selector (common images + Custom)
             this.db_image_combo = new Adw.ComboRow();
             this.db_image_combo.set_title("Image");
-            string[] image_labels = { "Ubuntu (latest)", "Debian (stable)", "Fedora (latest)", "Arch Linux (latest)", "openSUSE Tumbleweed", "Alpine (latest)", "Custom…" };
+            string[] image_labels = { 
+                "AlmaLinux (latest)", 
+                "Alpine (latest)", 
+                "Arch Linux (latest)", 
+                "CentOS Stream (latest)", 
+                "Debian (stable)", 
+                "Fedora (latest)", 
+                "openSUSE Tumbleweed", 
+                "Ubuntu (latest)", 
+                "Custom…" 
+            };
             this.db_image_combo.set_model(new Gtk.StringList(image_labels));
             this.db_image_combo.notify["selected"].connect(() => {
                 this.on_field_changed();
                 this.db_custom_image_row.set_visible(this.db_image_combo.get_selected() == image_labels.length - 1);
+                this.update_container_icon_for_selected_image();
             });
             this.container_group.add(this.db_image_combo);
 
@@ -397,6 +423,37 @@ namespace StillTerminal {
             this.db_advanced_expander.add_row(this.db_init_hooks_row);
         }
 
+        private void update_container_icon_for_selected_image() {
+            // Only auto-update icons for container profiles
+            if (this.profile.type != StProfileType.DISTROBOX) {
+                return;
+            }
+
+            // Only change the icon if it's currently one of the built-in distro icons;
+            // respect custom emojis or other icon choices.
+            if (this.profile.icon_name == null || !(this.profile.icon_name in AVAILABLE_ICONS)) {
+                return;
+            }
+
+            int sel = (int) this.db_image_combo.get_selected();
+            string? new_icon = null;
+            switch (sel) {
+                case 0: new_icon = "almalinux-symbolic"; break;
+                case 1: new_icon = "alpine-symbolic"; break;
+                case 2: new_icon = "archlinux-symbolic"; break;
+                case 3: new_icon = "centos-symbolic"; break;
+                case 4: new_icon = "debian-symbolic"; break;
+                case 5: new_icon = "fedora-symbolic"; break;
+                case 6: new_icon = "opensuse-symbolic"; break;
+                case 7: new_icon = "ubuntu-symbolic"; break;
+                default:
+                    // Custom image selection: don't override the current icon
+                    return;
+            }
+
+            this.set_icon(new_icon);
+        }
+
         private void setup_icon_picker() {
             this.icon_row = new Adw.ActionRow ();
             this.icon_row.set_title ("Profile Icon");
@@ -450,6 +507,12 @@ namespace StillTerminal {
         
         private void load_profile_data() {
             this.name_row.set_text (profile.name);
+            
+            // Make name field insensitive (grayed out) for the default profile
+            if (profile.id == "default") {
+                this.name_row.set_sensitive (false);
+            }
+            
             this.profile_type.set_subtitle (this.get_profile_type_display_name(this.profile.type));
             
             // Initialize selected scheme and subtitle
@@ -460,21 +523,43 @@ namespace StillTerminal {
             if (profile.spawn_command != null) {
                 this.spawn_command_row.set_text (profile.spawn_command);
             }
+            this.scrollback_row.set_value (profile.scrollback_lines);
             
-            // Load SSH-specific fields
-            if (profile.ssh_host != null) {
-                this.ssh_host_row.set_text(profile.ssh_host);
-            }
-            if (profile.ssh_user != null) {
-                this.ssh_user_row.set_text(profile.ssh_user);
-            }
-            this.ssh_port_row.set_value(profile.ssh_port);
-            if (profile.ssh_private_key_path != null) {
-                this.ssh_private_key_row.set_subtitle("Selected: " + File.new_for_path(profile.ssh_private_key_path).get_basename());
-            }
+            // Load SSH-specific fields from type_params
+            if (profile.type_params != null) {
+                // Host
+                string host = this.get_type_param_or_empty(profile, "ssh_host");
+                if (host != "") {
+                    this.ssh_host_row.set_text(host);
+                }
+                // User
+                string user = this.get_type_param_or_empty(profile, "ssh_user");
+                if (user != "") {
+                    this.ssh_user_row.set_text(user);
+                }
+                // Port (defaults to 22 if missing/invalid)
+                int port = 22;
+                if (profile.type_params.has_key("ssh_port")) {
+                    string? port_str = profile.type_params["ssh_port"];
+                    if (port_str != null) {
+                        try {
+                            port = int.parse(port_str);
+                        } catch (Error e) {
+                            port = 22;
+                        }
+                    }
+                }
+                this.ssh_port_row.set_value(port);
 
-            // Extra options
-            this.ssh_extra_options_row.set_text(profile.ssh_extra_options ?? "");
+                // Private key subtitle
+                string key_path = this.get_type_param_or_empty(profile, "ssh_private_key_path");
+                if (key_path != "") {
+                    this.ssh_private_key_row.set_subtitle("Selected: " + File.new_for_path(key_path).get_basename());
+                }
+
+                // Extra options
+                this.ssh_extra_options_row.set_text(this.get_type_param_or_empty(profile, "ssh_extra_options"));
+            }
             this.update_ssh_command_preview();
 
             // Load container-specific fields
@@ -491,17 +576,19 @@ namespace StillTerminal {
                 // Map image to known list, otherwise select Custom
                 int idx = 0;
                 switch (img) {
-                    case "docker.io/library/ubuntu:latest": idx = 0; break;
-                    case "docker.io/library/debian:stable": idx = 1; break;
-                    case "registry.fedoraproject.org/fedora:latest": idx = 2; break;
-                    case "docker.io/library/archlinux:latest": idx = 3; break;
-                    case "registry.opensuse.org/opensuse/tumbleweed:latest": idx = 4; break;
-                    case "docker.io/library/alpine:latest": idx = 5; break;
-                    default: idx = 6; break; // Custom
+                    case "docker.io/library/almalinux:latest": idx = 0; break;
+                    case "docker.io/library/alpine:latest": idx = 1; break;
+                    case "docker.io/library/archlinux:latest": idx = 2; break;
+                    case "quay.io/centos/centos:stream": idx = 3; break;
+                    case "docker.io/library/debian:stable": idx = 4; break;
+                    case "registry.fedoraproject.org/fedora:latest": idx = 5; break;
+                    case "registry.opensuse.org/opensuse/tumbleweed:latest": idx = 6; break;
+                    case "docker.io/library/ubuntu:latest": idx = 7; break;
+                    default: idx = 8; break; // Custom
                 }
                 this.db_image_combo.set_selected(idx);
-                this.db_custom_image_row.set_visible(idx == 6);
-                if (idx == 6) this.db_custom_image_row.set_text(img);
+                this.db_custom_image_row.set_visible(idx == 8);
+                if (idx == 8) this.db_custom_image_row.set_text(img);
                 this.update_container_fields_visibility();
 
                 // Initialize match theme toggle from type_params
@@ -562,8 +649,8 @@ namespace StillTerminal {
                 this.icon_preview_label.set_text(this.profile.icon_name);
                 this.icon_preview_stack.set_visible_child_name("emoji");
             } else if (this.profile.icon_name in AVAILABLE_ICONS) {
-                // It's a Linux distro icon
-                this.icon_preview_image.set_from_resource(@"/io/stillhq/terminal/icons/$(this.profile.icon_name).svg");
+                // It's a Linux distro icon (GTK will find it in registered icon theme paths)
+                this.icon_preview_image.set_from_icon_name(this.profile.icon_name);
                 this.icon_preview_stack.set_visible_child_name("icon");
             } else {
                 // No valid icon - show placeholder
@@ -590,7 +677,6 @@ namespace StillTerminal {
             string? ssh_host = this.ssh_host_row.get_text().strip() != "" ? this.ssh_host_row.get_text().strip() : null;
             string? ssh_user = this.ssh_user_row.get_text().strip() != "" ? this.ssh_user_row.get_text().strip() : null;
             int ssh_port = (int)this.ssh_port_row.get_value();
-            string? ssh_private_key_path = this.profile.ssh_private_key_path;
             
             // Generate profile ID: use existing ID if editing, or create new unique ID
             string profile_id;
@@ -607,6 +693,13 @@ namespace StillTerminal {
                 int64 timestamp = GLib.get_real_time() / 1000000;
                 profile_id = "%s_%ld".printf(name_slug, (long)timestamp);
             }
+
+            // For new container profiles that don't yet have an icon, default to Ubuntu
+            if ((this.profile.id == null || this.profile.id.strip() == "") &&
+                this.profile.type == StProfileType.DISTROBOX &&
+                (this.profile.icon_name == null || this.profile.icon_name == "")) {
+                this.set_icon("ubuntu-symbolic");
+            }
             
             var edited_profile = new StProfile (
                 profile_id,
@@ -617,19 +710,13 @@ namespace StillTerminal {
                 this.profile.profile_file,
                 this.profile.icon_name,  // This should be the current icon from editor
                 this.profile.type,
-                this.collect_type_params(profile_id),
+                this.collect_type_params(profile_id, ssh_host, ssh_user, ssh_port),
                 this.profile.type_subtitle,
-                ssh_host, ssh_user, ssh_port, ssh_private_key_path,
-                this.profile.ssh_auth_method, this.profile.ssh_strict_host_key_checking, this.ssh_extra_options_row.get_text()
+                (int) this.scrollback_row.get_value()
             );
-            
-            // Persist password to keyring if provided
-            if (edited_profile.type == StProfileType.SSH) {
-                var pw = this.ssh_password_row.get_text();
-                if (pw != null && pw.strip() != "" && edited_profile.id.strip() != "") {
-                    StSecretManager.store_password(edited_profile.id, pw);
-                }
-            }
+
+            // Note: SSH passwords are only saved to the keyring when the
+            // explicit "Save to Keyring" button is clicked, not on every save.
 
             return edited_profile;
         }
@@ -682,10 +769,12 @@ namespace StillTerminal {
             return "sterm_" + p.id;
         }
 
-        private Gee.HashMap<string,string>? collect_type_params(string profile_id) {
-            if (this.profile.type != StProfileType.DISTROBOX) {
-                return this.profile.type_params; // unchanged for other types
+        private Gee.HashMap<string,string>? collect_type_params(string profile_id, string? ssh_host, string? ssh_user, int ssh_port) {
+            // Non-container, non-SSH profiles: keep existing type_params unchanged
+            if (this.profile.type != StProfileType.DISTROBOX && this.profile.type != StProfileType.SSH) {
+                return this.profile.type_params;
             }
+
             if (this.container_group == null) return this.profile.type_params;
             var p = new Gee.HashMap<string,string>();
             Gee.HashMap<string,string>? existing_params = this.profile.type_params;
@@ -696,22 +785,58 @@ namespace StillTerminal {
                     }
                 }
             }
+
+            // SSH-specific parameters are stored in type_params for SSH profiles
+            if (this.profile.type == StProfileType.SSH) {
+                string[] ssh_keys = {
+                    "ssh_host",
+                    "ssh_user",
+                    "ssh_port",
+                    "ssh_extra_options"
+                };
+                foreach (string key in ssh_keys) {
+                    if (p.has_key(key)) {
+                        p.unset(key);
+                    }
+                }
+
+                if (ssh_host != null) {
+                    p["ssh_host"] = ssh_host;
+                }
+                if (ssh_user != null) {
+                    p["ssh_user"] = ssh_user;
+                }
+                if (ssh_port > 0) {
+                    p["ssh_port"] = ssh_port.to_string();
+                }
+
+                string extra = this.ssh_extra_options_row.get_text().strip();
+                if (extra != "") {
+                    p["ssh_extra_options"] = extra;
+                }
+
+                return p;
+            }
+
+            // Distrobox-specific parameters
             string[] managed_keys = {"image","additional_packages","additional_flags","volumes","init","root","pull","home","hostname","platform","pre_init_hooks","init_hooks","match_container_theme"};
             foreach (string key in managed_keys) {
                 if (p.has_key(key)) {
-                    p.remove(key);
+                    p.unset(key);
                 }
             }
             // Resolve selected image
             int sel = (int) this.db_image_combo.get_selected();
             string img = "";
             switch (sel) {
-                case 0: img = "docker.io/library/ubuntu:latest"; break;
-                case 1: img = "docker.io/library/debian:stable"; break;
-                case 2: img = "registry.fedoraproject.org/fedora:latest"; break;
-                case 3: img = "docker.io/library/archlinux:latest"; break;
-                case 4: img = "registry.opensuse.org/opensuse/tumbleweed:latest"; break;
-                case 5: img = "docker.io/library/alpine:latest"; break;
+                case 0: img = "docker.io/library/almalinux:latest"; break;
+                case 1: img = "docker.io/library/alpine:latest"; break;
+                case 2: img = "docker.io/library/archlinux:latest"; break;
+                case 3: img = "quay.io/centos/centos:stream"; break;
+                case 4: img = "docker.io/library/debian:stable"; break;
+                case 5: img = "registry.fedoraproject.org/fedora:latest"; break;
+                case 6: img = "registry.opensuse.org/opensuse/tumbleweed:latest"; break;
+                case 7: img = "docker.io/library/ubuntu:latest"; break;
                 default:
                     img = this.db_custom_image_row.get_text().strip();
                     if (img == "") img = "docker.io/library/ubuntu:latest";
@@ -832,13 +957,16 @@ namespace StillTerminal {
             }
 
             // SSH private key path must be valid if specified
-            if (this.profile.ssh_private_key_path != null && this.profile.ssh_private_key_path.strip() != "") {
-                var key_file = File.new_for_path(this.profile.ssh_private_key_path);
-                if (!key_file.query_exists()) {
-                    this.ssh_private_key_row.add_css_class("error");
-                    valid = false;
-                } else {
-                    this.ssh_private_key_row.remove_css_class("error");
+            if (this.profile.type_params != null && this.profile.type_params.has_key("ssh_private_key_path")) {
+                string? key_path = this.profile.type_params["ssh_private_key_path"];
+                if (key_path != null && key_path.strip() != "") {
+                    var key_file = File.new_for_path(key_path);
+                    if (!key_file.query_exists()) {
+                        this.ssh_private_key_row.add_css_class("error");
+                        valid = false;
+                    } else {
+                        this.ssh_private_key_row.remove_css_class("error");
+                    }
                 }
             }
 
@@ -889,7 +1017,11 @@ namespace StillTerminal {
             try {
                 var file = this.ssh_key_dialog.open.end(res);
                 if (file != null) {
-                    this.profile.ssh_private_key_path = file.get_path();
+                    // Ensure type_params exists
+                    if (this.profile.type_params == null) {
+                        this.profile.type_params = new Gee.HashMap<string,string>();
+                    }
+                    this.profile.type_params["ssh_private_key_path"] = file.get_path();
                     this.ssh_private_key_row.set_subtitle("Selected: " + file.get_basename());
                     this.on_field_changed();
                     this.update_ssh_command_preview();
@@ -921,15 +1053,33 @@ namespace StillTerminal {
             string? host = this.ssh_host_row.get_text().strip() != "" ? this.ssh_host_row.get_text().strip() : null;
             string? user = this.ssh_user_row.get_text().strip() != "" ? this.ssh_user_row.get_text().strip() : null;
             int port = (int)this.ssh_port_row.get_value();
-            string? key = this.profile.ssh_private_key_path;
+            string? key = null;
+            if (this.profile.type_params != null && this.profile.type_params.has_key("ssh_private_key_path")) {
+                key = this.profile.type_params["ssh_private_key_path"];
+            }
             string? extra = this.ssh_extra_options_row.get_text();
             string? spawn_cmd = this.spawn_command_row.get_text().strip() != "" ? this.spawn_command_row.get_text().strip() : null;
+
+            // Build a temporary profile snapshot using type_params for SSH-specific data
+            var temp_params = new Gee.HashMap<string,string>();
+            if (this.profile.type_params != null) {
+                foreach (var entry in this.profile.type_params.entries) {
+                    if (entry.value != null) {
+                        temp_params[entry.key] = entry.value;
+                    }
+                }
+            }
+            if (host != null) temp_params["ssh_host"] = host;
+            if (user != null) temp_params["ssh_user"] = user;
+            if (port > 0) temp_params["ssh_port"] = port.to_string();
+            if (key != null && key.strip() != "") temp_params["ssh_private_key_path"] = key.strip();
+            if (extra != null && extra.strip() != "") temp_params["ssh_extra_options"] = extra.strip();
 
             var temp = new StProfile(
                 this.profile.id, this.profile.name, this.profile.color_scheme, this.profile.working_directory,
                 spawn_cmd, this.profile.profile_file, this.profile.icon_name, this.profile.type,
-                this.profile.type_params, this.profile.type_subtitle,
-                host, user, port, key, this.profile.ssh_auth_method, this.profile.ssh_strict_host_key_checking, extra
+                temp_params, this.profile.type_subtitle,
+                this.profile.scrollback_lines
             );
 
             var args = temp.get_ssh_arguments();
@@ -1018,11 +1168,13 @@ namespace StillTerminal {
                 icon_box.margin_start = 12;
                 icon_box.margin_end = 12;
                 
-                var icon_image = new Gtk.Image.from_resource(@"/io/stillhq/terminal/icons/$(icon_name).svg");
+                var icon_image = new Gtk.Image.from_icon_name(icon_name);
                 icon_image.pixel_size = 48;
                 icon_box.append(icon_image);
                 
-                var icon_label = new Gtk.Label(icon_name);
+                // Display name without the -symbolic suffix
+                string display_name = icon_name.replace("-symbolic", "");
+                var icon_label = new Gtk.Label(display_name);
                 icon_label.add_css_class("caption");
                 icon_box.append(icon_label);
                 

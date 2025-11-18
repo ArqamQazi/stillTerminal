@@ -74,7 +74,7 @@
       <description>Show terminal scrollbars.</description>
     </key>
     <key name="scrollback-limit" type="i">
-      <default>1000</default>
+      <default>10000</default>
       <summary>Scrollback Limit</summary>
       <description>The scrollback limit.</description>
     </key>

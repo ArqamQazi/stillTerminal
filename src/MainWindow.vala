@@ -259,16 +259,9 @@ namespace StillTerminal {
 	}
 		// Remember this as the most recently opened profile
 		this.settings.last_profile_id = profile.id;
-    
-            // Auto-close when the terminal's child process exits
-            ulong child_exited_handler_id = page.terminal.child_exited.connect ((status) => {
-                if (this.tab_view.get_n_pages () > 1) {
-                    // Close just this tab
-                    this.tab_view.close_page (tab_page);
-                } else {
-                    // Last tab: close the window/app
-                    this.close ();
-                }
+
+            ulong press_any_key_handler_id = page.terminal.press_any_key_close_requested.connect (() => {
+                close_terminal_page (tab_page);
             });
 
             // Disconnect signal handlers when the tab is closed to prevent use-after-free
@@ -286,9 +279,7 @@ namespace StillTerminal {
             ulong page_detached_handler = 0;
             page_detached_handler = this.tab_view.page_detached.connect ((detached_page) => {
                 if (detached_page == tab_page) {
-                    // Disconnect the child_exited handler to prevent crashes
-                    page.terminal.disconnect (child_exited_handler_id);
-                    // Disconnect this cleanup handler itself
+                    page.terminal.disconnect (press_any_key_handler_id);
                     this.tab_view.disconnect (page_detached_handler);
                 }
             });
@@ -450,6 +441,14 @@ namespace StillTerminal {
             
             // No running processes, allow closing
             return false;
+        }
+
+        private void close_terminal_page (Adw.TabPage tab_page) {
+            if (this.tab_view.get_n_pages () > 1) {
+                this.tab_view.close_page (tab_page);
+            } else {
+                this.close ();
+            }
         }
     }
 }

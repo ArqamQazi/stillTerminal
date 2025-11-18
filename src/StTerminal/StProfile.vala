@@ -1,28 +1,4 @@
 namespace StillTerminal {
-    public enum StSshAuthMethod {
-        PUBLIC_KEY,
-        PASSWORD_STORED,
-        PASSWORD_INTERACTIVE;
-
-        public string to_string() {
-            switch (this) {
-                case PUBLIC_KEY: return "public_key";
-                case PASSWORD_STORED: return "password_stored";
-                case PASSWORD_INTERACTIVE: return "password_interactive";
-            }
-            return "public_key";
-        }
-
-        public static StSshAuthMethod from_string(string s) {
-            switch (s.ascii_down()) {
-                case "password_stored": return PASSWORD_STORED;
-                case "password_interactive": return PASSWORD_INTERACTIVE;
-                case "public_key":
-                default:
-                    return PUBLIC_KEY;
-            }
-        }
-    }
     public enum StProfileType {
         SYSTEM, DISTROBOX, SSH;
 
@@ -52,6 +28,7 @@ namespace StillTerminal {
     }
 
     public class StProfile : GLib.Object {
+        public const int DEFAULT_SCROLLBACK_LINES = 10000;
         public string id;
         public string name;
         public string color_scheme;
@@ -60,29 +37,41 @@ namespace StillTerminal {
         public string? profile_file;
         public string? icon_name;
         public StProfileType type;
-        // Dictionary of type-specific parameters for readability
+        // Dictionary of type-specific parameters for readability.
+        // For SSH profiles, all SSH-related settings are stored here using
+        // well-known keys (e.g. "ssh_host", "ssh_user", "ssh_port", ...).
         public Gee.HashMap<string,string>? type_params;
         public string? type_subtitle;
-        
-        // SSH-specific fields
-        public string? ssh_host;
-        public string? ssh_user;
-        public int ssh_port;
-        public string? ssh_private_key_path;
-        public StSshAuthMethod ssh_auth_method = StSshAuthMethod.PUBLIC_KEY;
-        public bool ssh_strict_host_key_checking = true;
-        public string? ssh_extra_options;
-    
+        public int scrollback_lines { get; set; }
+
+        private void ensure_type_params() {
+            if (this.type_params == null) {
+                this.type_params = new Gee.HashMap<string,string>();
+            }
+        }
+
+        private void set_type_param_or_null(string key, string? value) {
+            if (value == null || value.strip() == "") {
+                if (this.type_params != null && this.type_params.has_key(key)) {
+                    this.type_params.unset(key);
+                }
+                return;
+            }
+            ensure_type_params();
+            this.type_params[key] = value;
+        }
+
+        private void set_type_param(string key, string value) {
+            ensure_type_params();
+            this.type_params[key] = value;
+        }
+
         public StProfile (
             string id, string name, string color_scheme, string working_directory,
             string? spawn_command = null, string? profile_file = null,
             string? icon_name = null, StProfileType type = StProfileType.SYSTEM,
             Gee.HashMap<string,string>? type_params = null, string? type_subtitle = null,
-            string? ssh_host = null, string? ssh_user = null, int ssh_port = 22,
-            string? ssh_private_key_path = null,
-            StSshAuthMethod ssh_auth_method = StSshAuthMethod.PUBLIC_KEY,
-            bool ssh_strict_host_key_checking = true,
-            string? ssh_extra_options = null
+            int scrollback_lines = DEFAULT_SCROLLBACK_LINES
         ) {
             this.id = id;
             this.name = name;
@@ -94,13 +83,11 @@ namespace StillTerminal {
             this.type = type;
             this.type_params = type_params;
             this.type_subtitle = type_subtitle;
-            this.ssh_host = ssh_host;
-            this.ssh_user = ssh_user;
-            this.ssh_port = ssh_port;
-            this.ssh_private_key_path = ssh_private_key_path;
-            this.ssh_auth_method = ssh_auth_method;
-            this.ssh_strict_host_key_checking = ssh_strict_host_key_checking;
-            this.ssh_extra_options = ssh_extra_options;
+            this.scrollback_lines = scrollback_lines;
+        }
+
+        public int get_scrollback_lines_setting () {
+            return this.scrollback_lines;
         }
 
         public static StProfile? new_blank_profile() {
@@ -109,13 +96,13 @@ namespace StillTerminal {
                 "",
                 "system",
                 GLib.Environment.get_home_dir(),
-                null,
-                null,
-                null,
+                null,                          // spawn_command
+                null,                          // profile_file
+                null,                          // icon_name
                 StProfileType.SYSTEM,
-                null,
-                null,
-                null, null, 22, null, StSshAuthMethod.PUBLIC_KEY, true, null
+                null,                          // type_params
+                null,                          // type_subtitle
+                StProfile.DEFAULT_SCROLLBACK_LINES
             );
         }
     
@@ -145,30 +132,39 @@ namespace StillTerminal {
                 }
             }
 
-            string? ssh_host = null;
-            string? ssh_user = null;
-            int ssh_port = 22;
-            string? ssh_private_key_path = null;
-            StSshAuthMethod ssh_auth_method = StSshAuthMethod.PUBLIC_KEY;
-            bool ssh_strict_host_key_checking = true;
-            string? ssh_extra_options = null;
+            // For SSH profiles, migrate any legacy top-level ssh_* keys into type_params
             if (profile_type == StProfileType.SSH) {
-                ssh_host = obj.has_member("ssh_host") ? obj.get_string_member("ssh_host") : null;
-                ssh_user = obj.has_member("ssh_user") ? obj.get_string_member("ssh_user") : null;
-                ssh_port = obj.has_member("ssh_port") ? (int) obj.get_int_member("ssh_port") : 22;
-                ssh_private_key_path = obj.has_member("ssh_private_key_path") ? obj.get_string_member("ssh_private_key_path") : null;
-                if (obj.has_member("ssh_auth_method")) {
-                    ssh_auth_method = StSshAuthMethod.from_string(obj.get_string_member("ssh_auth_method"));
+                if (type_params == null) {
+                    type_params = new Gee.HashMap<string,string>();
                 }
-                if (obj.has_member("ssh_strict_host_key_checking")) {
-                    // Prefer boolean; assume valid schema
-                    ssh_strict_host_key_checking = obj.get_boolean_member("ssh_strict_host_key_checking");
+                if (obj.has_member("ssh_host")) {
+                    type_params["ssh_host"] = obj.get_string_member("ssh_host");
                 }
+                if (obj.has_member("ssh_user")) {
+                    type_params["ssh_user"] = obj.get_string_member("ssh_user");
+                }
+                if (obj.has_member("ssh_port")) {
+                    int legacy_port = (int) obj.get_int_member("ssh_port");
+                    type_params["ssh_port"] = legacy_port.to_string();
+                }
+                if (obj.has_member("ssh_private_key_path")) {
+                    type_params["ssh_private_key_path"] = obj.get_string_member("ssh_private_key_path");
+                }
+                // ssh_auth_method and ssh_strict_host_key_checking were previously
+                // persisted but are no longer used. We intentionally ignore them
+                // here so old profiles load but the unused fields disappear on
+                // the next save.
                 if (obj.has_member("ssh_extra_options")) {
-                    ssh_extra_options = obj.get_string_member("ssh_extra_options");
+                    type_params["ssh_extra_options"] = obj.get_string_member("ssh_extra_options");
                 }
             }
     
+            int scrollback_lines = DEFAULT_SCROLLBACK_LINES;
+            if (obj.has_member("scrollback_lines")) {
+                scrollback_lines = (int) obj.get_int_member("scrollback_lines");
+            }
+            if (scrollback_lines < -1) scrollback_lines = DEFAULT_SCROLLBACK_LINES;
+
             return new StProfile(
                 obj.get_string_member("id"),
                 obj.get_string_member("name"),
@@ -180,8 +176,7 @@ namespace StillTerminal {
                 profile_type,
                 type_params,
                 obj.has_member("type_subtitle") ? obj.get_string_member("type_subtitle") : "",
-                ssh_host, ssh_user, ssh_port, ssh_private_key_path,
-                ssh_auth_method, ssh_strict_host_key_checking, ssh_extra_options
+                scrollback_lines
             );
         }
     
@@ -195,19 +190,13 @@ namespace StillTerminal {
             if (this.profile_file != null) hash["profile_file"] = this.profile_file;
             if (this.icon_name != null) hash["icon_name"] = this.icon_name;
             hash["type"] = this.type.to_string();
+            hash["scrollback_lines"] = this.scrollback_lines.to_string();
             if (this.type_params != null) {
                 foreach (var entry in this.type_params.entries) {
                     hash["type_params." + entry.key] = entry.value;
                 }
             }
             if (this.type_subtitle != null) hash["type_subtitle"] = this.type_subtitle;
-            if (this.ssh_host != null) hash["ssh_host"] = this.ssh_host;
-            if (this.ssh_user != null) hash["ssh_user"] = this.ssh_user;
-            hash["ssh_port"] = this.ssh_port.to_string();
-            if (this.ssh_private_key_path != null) hash["ssh_private_key_path"] = this.ssh_private_key_path;
-            hash["ssh_auth_method"] = this.ssh_auth_method.to_string();
-            hash["ssh_strict_host_key_checking"] = this.ssh_strict_host_key_checking ? "true" : "false";
-            if (this.ssh_extra_options != null) hash["ssh_extra_options"] = this.ssh_extra_options;
             return hash;
         }
     
@@ -218,15 +207,11 @@ namespace StillTerminal {
             // Add all string fields
             var hash = this.as_hash();
             foreach (var entry in hash.entries) {
-                if (entry.key == "ssh_port") {
-                    // Handle SSH port as integer
+                if (entry.key == "scrollback_lines") {
                     builder.set_member_name(entry.key);
                     builder.add_int_value(int.parse(entry.value));
                 } else if (entry.key.has_prefix("type_params.")) {
                     // Defer: we write type_params as a single object outside this loop
-                } else if (entry.key == "ssh_strict_host_key_checking") {
-                    builder.set_member_name(entry.key);
-                    builder.add_boolean_value(entry.value == "true" || entry.value == "1");
                 } else {
                     // Handle all other fields as strings
                     builder.set_member_name(entry.key);
@@ -262,37 +247,80 @@ namespace StillTerminal {
                 return null;
             }
 
-            if (this.ssh_host == null || this.ssh_host.strip() == "") {
+            if (this.type_params == null) {
                 return null;
+            }
+
+            // Host (required)
+            string? host = null;
+            if (this.type_params.has_key("ssh_host")) {
+                host = this.type_params["ssh_host"];
+            }
+            if (host == null || host.strip() == "") {
+                return null;
+            }
+
+            // User (optional)
+            string? user = null;
+            if (this.type_params.has_key("ssh_user")) {
+                user = this.type_params["ssh_user"];
+            }
+
+            // Port (optional, default 22)
+            int port = 22;
+            if (this.type_params.has_key("ssh_port")) {
+                string? port_str = this.type_params["ssh_port"];
+                if (port_str != null) {
+                    try {
+                        port = int.parse(port_str);
+                    } catch (Error e) {
+                        port = 22;
+                    }
+                }
+            }
+            if (port < 1 || port > 65535) {
+                port = 22;
+            }
+
+            // Private key path (optional)
+            string? key_path = null;
+            if (this.type_params.has_key("ssh_private_key_path")) {
+                key_path = this.type_params["ssh_private_key_path"];
+            }
+
+            // Extra options (optional)
+            string? extra_opts = null;
+            if (this.type_params.has_key("ssh_extra_options")) {
+                extra_opts = this.type_params["ssh_extra_options"];
             }
 
             var args = new Gee.ArrayList<string>();
             args.add("ssh");
 
             // Add user if specified
-            if (this.ssh_user != null && this.ssh_user.strip() != "") {
+            if (user != null && user.strip() != "") {
                 args.add("-l");
-                args.add(this.ssh_user.strip());
+                args.add(user.strip());
             }
 
             // Add port if not default (22)
-            if (this.ssh_port != 22) {
+            if (port != 22) {
                 args.add("-p");
-                args.add(this.ssh_port.to_string());
+                args.add(port.to_string());
             }
 
             // Add private key if specified
-            if (this.ssh_private_key_path != null && this.ssh_private_key_path.strip() != "") {
+            if (key_path != null && key_path.strip() != "") {
                 args.add("-i");
-                args.add(this.ssh_private_key_path.strip());
+                args.add(key_path.strip());
                 // Ensure only the provided identity is used (avoid agent/default keys masking invalid -i)
                 args.add("-o");
                 args.add("IdentitiesOnly=yes");
             }
 
             // Extra options (advanced users)
-            if (this.ssh_extra_options != null && this.ssh_extra_options.strip() != "") {
-                foreach (string part in this.ssh_extra_options.strip().split(" ")) {
+            if (extra_opts != null && extra_opts.strip() != "") {
+                foreach (string part in extra_opts.strip().split(" ")) {
                     if (part.strip() != "") args.add(part);
                 }
             }
@@ -305,7 +333,7 @@ namespace StillTerminal {
             }
 
             // Add host
-            args.add(this.ssh_host.strip());
+            args.add(host.strip());
 
             // If a starting command is provided, run it on the remote side as a single string
             // This preserves intended quoting when shown in the preview and executed remotely
@@ -323,13 +351,13 @@ namespace StillTerminal {
             "System",
             "system",
             GLib.Environment.get_home_dir(),
-            null,
-            null,
-            null,
-            StProfileType.SYSTEM,
-            null,
-            "stillOS (Fallback Profile)",
-            null, null, 22, null
+                null,                          // spawn_command
+                null,                          // profile_file
+                null,                          // icon_name
+                StProfileType.SYSTEM,
+                null,                          // type_params
+                "stillOS (Fallback Profile)",
+                StProfile.DEFAULT_SCROLLBACK_LINES
         );
     }
 

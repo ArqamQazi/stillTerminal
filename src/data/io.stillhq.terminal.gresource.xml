@@ -3,15 +3,18 @@
   <gresource prefix="/io/stillhq/terminal">
     <file>style.css</file>
     <file>io.stillhq.terminal.gschema.xml</file>
-    <file preprocess="xml-stripblanks">icons/almalinux.svg</file>
-    <file preprocess="xml-stripblanks">icons/alpine.svg</file>
-    <file preprocess="xml-stripblanks">icons/archlinux.svg</file>
-    <file preprocess="xml-stripblanks">icons/centos.svg</file>
-    <file preprocess="xml-stripblanks">icons/debian.svg</file>
-    <file preprocess="xml-stripblanks">icons/fedora.svg</file>
-    <file preprocess="xml-stripblanks">icons/opensuse.svg</file>
-    <file preprocess="xml-stripblanks">icons/ubuntu.svg</file>
-    <file preprocess="xml-stripblanks">icons/redhat.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/almalinux-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/alpine-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/archlinux-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/centos-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/debian-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/fedora-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/opensuse-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/ubuntu-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/apps/redhat-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/container-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/container-terminal-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/remote-terminal-symbolic.svg</file>
     <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/settings-symbolic.svg</file>
     <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/menu-symbolic.svg</file>
     <file preprocess="xml-stripblanks">icons/symbolic/scalable/actions/menu-large-symbolic.svg</file>
