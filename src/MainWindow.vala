@@ -9,30 +9,51 @@ namespace StillTerminal {
         private bool new_tab_dialog_showing = false;
 
 
-        public MainWindow (Adw.Application app) {
+        public MainWindow (Adw.Application app, bool create_initial_tab = true) {
             Object (application: app);
 
             this.settings = new StillTerminal.StSettings ();
             this.default_height = this.settings.window_height;
             this.default_width = this.settings.window_width;
             this.add_css_class ("transparent-window");
-    
+
             // Load the CSS file
             // Adw.Application automatically loads styles from the resource base path
             // (style.css, style-dark.css, etc.). No explicit provider needed here.
-    
+
             this.tab_view = new Adw.TabView ();
+            this.tab_view.page_attached.connect (this.on_page_attached);
             this.header = new StHeaderBar (this);
 
             // Handle tab closing via tab view (X button, etc.)
             this.tab_view.close_page.connect (on_close_page_request);
-    
+            this.tab_view.create_window.connect ((view) => {
+                var new_window = new MainWindow (this.get_application () as Adw.Application, false);
+                new_window.present ();
+                return new_window.tab_view;
+            });
+
+            this.tab_view.notify["selected-page"].connect (() => {
+                if (this.tab_view.selected_page != null) {
+                    set_window_title (this.tab_view.selected_page);
+                    var page = this.tab_view.selected_page.get_child () as StTerminalPage;
+                    if (page != null) {
+                        GLib.Idle.add (() => {
+                            page.terminal.grab_focus ();
+                            return GLib.Source.REMOVE;
+                        });
+                    }
+                }
+            });
+
             var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
             box.append (this.header);
             box.append (this.tab_view);
-    
-			this.add_tab (get_last_or_default_profile ());
-    
+
+            if (create_initial_tab) {
+                this.add_tab (get_last_or_default_profile ());
+            }
+
             // Wrap content in a TabOverview so the overview can take over the
             // entire window without the custom header being visible
             this.tab_overview = new Adw.TabOverview ();
@@ -44,73 +65,73 @@ namespace StillTerminal {
             this.tab_overview.set_show_end_title_buttons (true);
 
             this.content = this.tab_overview;
-    
-			// ACTIONS
-			var new_tab_action = new SimpleAction ("new-tab", null);
-			new_tab_action.activate.connect (() => {
-				this.present_new_tab_dialog ();
-			});
-			app.add_action (new_tab_action);
 
-			var reopen_last_tab_action = new SimpleAction ("reopen-last-tab", null);
-			reopen_last_tab_action.activate.connect (() => {
-				var profile = get_last_or_default_profile ();
-				this.add_tab (profile);
-			});
-			app.add_action (reopen_last_tab_action);
-    
-                    var close_tab_action = new SimpleAction ("close-tab", null);
-        close_tab_action.activate.connect (() => {
-            var current_page = this.tab_view.get_selected_page ();
-            var terminal_page = current_page.get_child () as StTerminalPage;
-            
-            if (this.tab_view.get_n_pages () > 1) {
-                // Check if this tab has running processes
-                if (terminal_page != null && terminal_page.terminal.has_running_process ()) {
-                    show_close_tab_confirmation_dialog (current_page);
+            // ACTIONS
+            var new_tab_action = new SimpleAction ("new-tab", null);
+            new_tab_action.activate.connect (() => {
+                this.present_new_tab_dialog ();
+            });
+            app.add_action (new_tab_action);
+
+            var reopen_last_tab_action = new SimpleAction ("reopen-last-tab", null);
+            reopen_last_tab_action.activate.connect (() => {
+                var profile = get_last_or_default_profile ();
+                this.add_tab (profile);
+            });
+            app.add_action (reopen_last_tab_action);
+
+            var close_tab_action = new SimpleAction ("close-tab", null);
+            close_tab_action.activate.connect (() => {
+                var current_page = this.tab_view.get_selected_page ();
+                var terminal_page = current_page.get_child () as StTerminalPage;
+
+                if (this.tab_view.get_n_pages () > 1) {
+                    // Check if this tab has running processes
+                    if (terminal_page != null && terminal_page.terminal.has_running_process ()) {
+                        show_close_tab_confirmation_dialog (current_page);
+                    } else {
+                        this.tab_view.close_page (current_page);
+                    }
                 } else {
-                    this.tab_view.close_page (current_page);
+                    // Last tab - use window close which already has process checking
+                    this.close ();
                 }
-            } else {
-                // Last tab - use window close which already has process checking
-                this.close ();
-            }
-        });
+            });
             app.add_action (close_tab_action);
-            
+
             var next_tab_action = new SimpleAction ("next-tab", null);
             next_tab_action.activate.connect (() => {
                 var current_page = this.tab_view.get_selected_page ();
                 var next_page = this.tab_view.get_nth_page (
                     (this.tab_view.get_page_position (current_page) + 1) % this.tab_view.get_n_pages ()
-                );
+                    );
                 this.tab_view.set_selected_page (next_page);
             });
             app.add_action (next_tab_action);
-    
+
             var previous_tab_action = new SimpleAction ("previous-tab", null);
             previous_tab_action.activate.connect (() => {
                 var current_page = this.tab_view.get_selected_page ();
                 var previous_page = this.tab_view.get_nth_page (
                     (this.tab_view.get_page_position (current_page) - 1 + this.tab_view.get_n_pages ()) % this.tab_view.get_n_pages ()
-                );
+                    );
                 this.tab_view.set_selected_page (previous_page);
             });
             app.add_action (previous_tab_action);
-    
+
             var copy_action = new SimpleAction ("copy", null);
             copy_action.activate.connect (() => {
                 // Prefer format-aware copy when available
                 this.get_current_terminal_page ().terminal.copy_clipboard_format (Vte.Format.TEXT);
             });
             app.add_action (copy_action);
-    
+
             var paste_action = new SimpleAction ("paste", null);
             paste_action.activate.connect (() => {
                 this.get_current_terminal_page ().terminal.paste_clipboard ();
             });
             app.add_action (paste_action);
-    
+
             var fullscreen_action = new SimpleAction.stateful ("fullscreen", null, new Variant.boolean (false));
             fullscreen_action.activate.connect (() => {
                 bool is_fullscreen = fullscreen_action.get_state ().get_boolean ();
@@ -123,27 +144,32 @@ namespace StillTerminal {
                 }
             });
             app.add_action (fullscreen_action);
-    
+
             var new_window_action = new SimpleAction ("new-window", null);
             new_window_action.activate.connect (() => {
                 var win = new MainWindow (this.get_application () as Adw.Application);
                 win.present ();
             });
             app.add_action (new_window_action);
-            
+
             var preferences_action = new SimpleAction ("preferences", null);
             preferences_action.activate.connect (() => {
-                var dialog = new StPrefsDialog (this);
-                dialog.present (this);
+                if (StPrefsDialog.active_instance != null) {
+                    StPrefsDialog.active_instance.window.present ();
+                    StPrefsDialog.active_instance.present (StPrefsDialog.active_instance.window);
+                } else {
+                    var dialog = new StPrefsDialog (this);
+                    dialog.present (this);
+                }
             });
             app.add_action (preferences_action);
-    
+
             var zoom_in_action = new SimpleAction ("zoom-in", null);
             zoom_in_action.activate.connect (() => {
                 this.get_current_terminal_page ().modify_zoom (0.1);
             });
             app.add_action (zoom_in_action);
-    
+
             var zoom_out_action = new SimpleAction ("zoom-out", null);
             zoom_out_action.activate.connect (() => {
                 this.get_current_terminal_page ().modify_zoom (-0.1);
@@ -164,24 +190,28 @@ namespace StillTerminal {
             var color_scheme_action = new SimpleAction.stateful ("color-scheme", VariantType.STRING, new Variant.string ("system"));
             color_scheme_action.activate.connect ((parameter) => {
                 // Menu items pass target as parameter for activate
-                if (parameter == null) return;
+                if (parameter == null) {
+                    return;
+                }
                 var target = parameter.get_string ();
                 color_scheme_action.change_state (new Variant.string (target));
             });
             color_scheme_action.change_state.connect ((parameter) => {
-                if (parameter == null) return;
+                if (parameter == null) {
+                    return;
+                }
                 var choice = parameter.get_string ();
                 var sm = Adw.StyleManager.get_default ();
                 switch (choice) {
-                case "light":
-                    sm.set_color_scheme (Adw.ColorScheme.FORCE_LIGHT);
-                    break;
-                case "dark":
-                    sm.set_color_scheme (Adw.ColorScheme.FORCE_DARK);
-                    break;
-                default:
-                    sm.set_color_scheme (Adw.ColorScheme.DEFAULT);
-                    break;
+                        case "light":
+                            sm.set_color_scheme (Adw.ColorScheme.FORCE_LIGHT);
+                            break;
+                        case "dark":
+                            sm.set_color_scheme (Adw.ColorScheme.FORCE_DARK);
+                            break;
+                        default:
+                            sm.set_color_scheme (Adw.ColorScheme.DEFAULT);
+                            break;
                 }
                 color_scheme_action.set_state (new Variant.string (choice));
             });
@@ -229,52 +259,69 @@ namespace StillTerminal {
             });
             app.add_action (select_all_action);
 
-		this.settings.refresh_accelerators(app);
+            this.settings.refresh_accelerators (app);
 
-		// When the last tab is closed, close the application
-		this.tab_view.page_detached.connect ((p) => {
-			if (this.tab_view.get_n_pages () == 0) {
-				this.close ();
-			}
-		});
-            
-                    // SHORTCUTS
-        this.add_controller (shortcuts.controller);
-        this.settings.bind_to_shortcut_controller (shortcuts);
-        this.shortcuts.refresh_shortcuts ();
+            // When the last tab is closed, close the application
+            this.tab_view.page_detached.connect ((p) => {
+                if (this.tab_view.get_n_pages () == 0) {
+                    this.close ();
+                }
+            });
 
-        // Handle window close request for process confirmation
-        this.close_request.connect (on_close_request);
+            // SHORTCUTS
+            this.add_controller (shortcuts.controller);
+            this.settings.bind_to_shortcut_controller (shortcuts);
+            this.shortcuts.refresh_shortcuts ();
+
+            // Handle window close request for process confirmation
+            this.close_request.connect (on_close_request);
         }
-    
+
         public Adw.TabPage add_tab (StProfile profile) {
-		bool was_empty = (this.tab_view.get_n_pages () == 0);
-		var page = new StTerminalPage (this.settings, profile);
+            bool was_empty = (this.tab_view.get_n_pages () == 0);
+            var page = new StTerminalPage (this.settings, profile);
             Adw.TabPage tab_page = this.tab_view.append (page);
+
             tab_page.title = profile.name;
-            page.terminal.set_tab_page (tab_page);
             this.tab_view.set_selected_page (tab_page);
-	if (was_empty && this.tab_overview != null) {
-		this.tab_overview.set_open (false);
-	}
-		// Remember this as the most recently opened profile
-		this.settings.last_profile_id = profile.id;
+            if (was_empty && this.tab_overview != null) {
+                this.tab_overview.set_open (false);
+            }
+
+            // Remember this as the most recently opened profile
+            this.settings.last_profile_id = profile.id;
+
+            return tab_page;
+        }
+
+        private void on_page_attached (Adw.TabPage tab_page, int position) {
+            var page = tab_page.get_child () as StTerminalPage;
+            if (page == null) {
+                return;
+            }
+
+            // Connect title listener immediately to catch initial title
+            tab_page.notify["title"].connect (() => {
+                if (this.tab_view.selected_page == tab_page) {
+                    set_window_title (tab_page);
+                }
+            });
+
+            if (this.tab_view.selected_page == tab_page) {
+                set_window_title (tab_page);
+            }
+
+            page.terminal.set_tab_page (tab_page);
+
+            // If title is empty (e.g. moved tab might need refresh), try to set it from profile
+            if (tab_page.title == "") {
+                tab_page.title = page.terminal.profile.name;
+            }
 
             ulong press_any_key_handler_id = page.terminal.press_any_key_close_requested.connect (() => {
                 close_terminal_page (tab_page);
             });
 
-            // Disconnect signal handlers when the tab is closed to prevent use-after-free
-            tab_page.notify["selected"].connect (() => {
-                set_window_title (tab_page, page.terminal);
-            });
-            
-            tab_page.notify["title"].connect (() => {
-                if (this.tab_view.get_n_pages () <= 1 && this.tab_view.get_selected_page () == tab_page) {
-                    set_window_title (tab_page, page.terminal);
-                }
-            });
-            
             // Clean up signal handlers when page is being closed
             ulong page_detached_handler = 0;
             page_detached_handler = this.tab_view.page_detached.connect ((detached_page) => {
@@ -283,8 +330,6 @@ namespace StillTerminal {
                     this.tab_view.disconnect (page_detached_handler);
                 }
             });
-    
-            return tab_page;
         }
 
         public StProfile get_last_or_default_profile () {
@@ -299,31 +344,35 @@ namespace StillTerminal {
             }
             return get_default_profile ();
         }
-    
-        public void set_window_title (Adw.TabPage tab_page, StTerminal terminal) {
-            size_t _len = 0;
-            string? term_title = terminal.get_termprop_string ("xterm.title", out _len);
-            this.header.window_title.set_title (
-                terminal.profile.name + ": " + (term_title ?? "")
-            );
+
+        public void set_window_title (Adw.TabPage tab_page) {
+            this.header.window_title.set_title (tab_page.title);
         }
 
-		private void present_new_tab_dialog () {
-			if (this.new_tab_dialog_showing) {
-				return;
-			}
-			this.new_tab_dialog_showing = true;
-			var new_tab = new StNewTabDialog (this);
-			new_tab.dialog.closed.connect (() => {
-				this.new_tab_dialog_showing = false;
-			});
-			new_tab.present (this);
-		}
-    
+        private void present_new_tab_dialog () {
+            if (this.new_tab_dialog_showing) {
+                return;
+            }
+            this.new_tab_dialog_showing = true;
+            var new_tab = new StNewTabDialog (this);
+            new_tab.dialog.closed.connect (() => {
+                this.new_tab_dialog_showing = false;
+                // Ensure focus returns to the terminal after the dialog closes
+                GLib.Idle.add (() => {
+                    var page = this.get_current_terminal_page ();
+                    if (page != null) {
+                        page.terminal.grab_focus ();
+                    }
+                    return GLib.Source.REMOVE;
+                });
+            });
+            new_tab.present (this);
+        }
+
         public StTerminalPage get_current_terminal_page () {
             return this.tab_view.get_selected_page ().get_child () as StTerminalPage;
         }
-    
+
         public override void size_allocate (int width, int height, int baseline) {
             if (this.settings.keep_window_size) {
                 this.settings.window_width = width;
@@ -362,8 +411,8 @@ namespace StillTerminal {
             var dialog = new Adw.AlertDialog (
                 "Processes are still running",
                 "Closing this window will terminate all running processes. Are you sure you want to continue?"
-            );
-            
+                );
+
             dialog.add_response ("cancel", "_Cancel");
             dialog.add_response ("close", "_Close Window");
             dialog.set_response_appearance ("close", Adw.ResponseAppearance.DESTRUCTIVE);
@@ -388,8 +437,8 @@ namespace StillTerminal {
             var dialog = new Adw.AlertDialog (
                 "Process is still running",
                 "Closing this tab will terminate the running process. Are you sure you want to continue?"
-            );
-            
+                );
+
             dialog.add_response ("cancel", "_Cancel");
             dialog.add_response ("close", "_Close Tab");
             dialog.set_response_appearance ("close", Adw.ResponseAppearance.DESTRUCTIVE);
@@ -426,7 +475,7 @@ namespace StillTerminal {
          */
         private bool on_close_page_request (Adw.TabPage page) {
             var terminal_page = page.get_child () as StTerminalPage;
-            
+
             if (terminal_page != null && terminal_page.terminal.has_running_process ()) {
                 // If this is the last tab, use window close confirmation
                 if (this.tab_view.get_n_pages () <= 1) {
@@ -438,7 +487,7 @@ namespace StillTerminal {
                     return true; // Prevent the close
                 }
             }
-            
+
             // No running processes, allow closing
             return false;
         }

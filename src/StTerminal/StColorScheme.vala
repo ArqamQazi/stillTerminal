@@ -110,7 +110,7 @@ namespace StillTerminal {
             string dark_blue, string dark_magenta, string dark_cyan, string dark_white,
             string dark_bright_black, string dark_bright_red, string dark_bright_green, string dark_bright_yellow,
             string dark_bright_blue, string dark_bright_magenta, string dark_bright_cyan, string dark_bright_white
-        ) {
+            ) {
             var scheme = new StColorScheme (id);
             scheme.name = name;
 
@@ -171,11 +171,11 @@ namespace StillTerminal {
             string light_highlight_color,
             string[] light_palette,
             string dark_foreground_color,
-            string dark_background_color, 
+            string dark_background_color,
             string dark_bold_color,
             string dark_highlight_color,
             string[] dark_palette
-        ) {
+            ) {
             var scheme = new StColorScheme (id);
             scheme.name = name;
 
@@ -230,43 +230,43 @@ namespace StillTerminal {
 
         public string[] get_light_palette () {
             return new string[] {
-                this.light_black,
-                this.light_red,
-                this.light_green,
-                this.light_yellow,
-                this.light_blue,
-                this.light_magenta,
-                this.light_cyan,
-                this.light_white,
-                this.light_bright_black,
-                this.light_bright_red,
-                this.light_bright_green,
-                this.light_bright_yellow,
-                this.light_bright_blue,
-                this.light_bright_magenta,
-                this.light_bright_cyan,
-                this.light_bright_white
+                       this.light_black,
+                       this.light_red,
+                       this.light_green,
+                       this.light_yellow,
+                       this.light_blue,
+                       this.light_magenta,
+                       this.light_cyan,
+                       this.light_white,
+                       this.light_bright_black,
+                       this.light_bright_red,
+                       this.light_bright_green,
+                       this.light_bright_yellow,
+                       this.light_bright_blue,
+                       this.light_bright_magenta,
+                       this.light_bright_cyan,
+                       this.light_bright_white
             };
         }
 
         public string[] get_dark_palette () {
             return new string[] {
-                this.dark_black,
-                this.dark_red,
-                this.dark_green,
-                this.dark_yellow,
-                this.dark_blue,
-                this.dark_magenta,
-                this.dark_cyan,
-                this.dark_white,
-                this.dark_bright_black,
-                this.dark_bright_red,
-                this.dark_bright_green,
-                this.dark_bright_yellow,
-                this.dark_bright_blue,
-                this.dark_bright_magenta,
-                this.dark_bright_cyan,
-                this.dark_bright_white
+                       this.dark_black,
+                       this.dark_red,
+                       this.dark_green,
+                       this.dark_yellow,
+                       this.dark_blue,
+                       this.dark_magenta,
+                       this.dark_cyan,
+                       this.dark_white,
+                       this.dark_bright_black,
+                       this.dark_bright_red,
+                       this.dark_bright_green,
+                       this.dark_bright_yellow,
+                       this.dark_bright_blue,
+                       this.dark_bright_magenta,
+                       this.dark_bright_cyan,
+                       this.dark_bright_white
             };
         }
 
@@ -291,7 +291,7 @@ namespace StillTerminal {
             return palette;
         }
 
-        public Gdk.RGBA[] get_light_rgba_palette() {
+        public Gdk.RGBA[] get_light_rgba_palette () {
             Gdk.RGBA[] palette = new Gdk.RGBA[16];
             palette[0].parse (this.light_black);
             palette[1].parse (this.light_red);
@@ -312,94 +312,94 @@ namespace StillTerminal {
             return palette;
         }
 
-        public static StColorScheme? new_from_json(string filename) {
+        public static StColorScheme? new_from_json (string filename) {
             // Each json will have a light and dark hash with the colors
 
             try {
-                Json.Parser parser = new Json.Parser();
-                parser.load_from_file(filename);
+                Json.Parser parser = new Json.Parser ();
+                parser.load_from_file (filename);
 
-                Json.Object obj = parser.get_root ().get_object();
+                Json.Object obj = parser.get_root ().get_object ();
 
                 string id = obj.get_string_member ("id");
                 string name = obj.get_string_member ("name");
 
                 // Extract light and dark color schemes
-                Json.Object light = obj.get_object_member("light");
-                Json.Object dark = obj.get_object_member("dark");
+                Json.Object light = obj.get_object_member ("light");
+                Json.Object dark = obj.get_object_member ("dark");
 
                 // Create the color scheme using new_from_colors
                 return new_from_colors (
                     id, name,
-                    light.get_string_member("foreground_color"),
-                    light.get_string_member("background_color"),
-                    light.get_string_member("bold_color"),
-                    light.get_string_member("cursor_color"),
-                    light.get_string_member("highlight_color"),
-                    light.get_string_member("black"),
-                    light.get_string_member("red"),
-                    light.get_string_member("green"),
-                    light.get_string_member("yellow"),
-                    light.get_string_member("blue"),
-                    light.get_string_member("magenta"),
-                    light.get_string_member("cyan"),
-                    light.get_string_member("white"),
-                    light.get_string_member("bright_black"),
-                    light.get_string_member("bright_red"),
-                    light.get_string_member("bright_green"),
-                    light.get_string_member("bright_yellow"),
-                    light.get_string_member("bright_blue"),
-                    light.get_string_member("bright_magenta"),
-                    light.get_string_member("bright_cyan"),
-                    light.get_string_member("bright_white"),
-                    dark.get_string_member("foreground_color"),
-                    dark.get_string_member("background_color"),
-                    dark.get_string_member("bold_color"),
-                    dark.get_string_member("cursor_color"),
-                    dark.get_string_member("highlight_color"),
-                    dark.get_string_member("black"),
-                    dark.get_string_member("red"),
-                    dark.get_string_member("green"),
-                    dark.get_string_member("yellow"),
-                    dark.get_string_member("blue"),
-                    dark.get_string_member("magenta"),
-                    dark.get_string_member("cyan"),
-                    dark.get_string_member("white"),
-                    dark.get_string_member("bright_black"),
-                    dark.get_string_member("bright_red"),
-                    dark.get_string_member("bright_green"),
-                    dark.get_string_member("bright_yellow"),
-                    dark.get_string_member("bright_blue"),
-                    dark.get_string_member("bright_magenta"),
-                    dark.get_string_member("bright_cyan"),
-                    dark.get_string_member("bright_white")
-                );
+                    light.get_string_member ("foreground_color"),
+                    light.get_string_member ("background_color"),
+                    light.get_string_member ("bold_color"),
+                    light.get_string_member ("cursor_color"),
+                    light.get_string_member ("highlight_color"),
+                    light.get_string_member ("black"),
+                    light.get_string_member ("red"),
+                    light.get_string_member ("green"),
+                    light.get_string_member ("yellow"),
+                    light.get_string_member ("blue"),
+                    light.get_string_member ("magenta"),
+                    light.get_string_member ("cyan"),
+                    light.get_string_member ("white"),
+                    light.get_string_member ("bright_black"),
+                    light.get_string_member ("bright_red"),
+                    light.get_string_member ("bright_green"),
+                    light.get_string_member ("bright_yellow"),
+                    light.get_string_member ("bright_blue"),
+                    light.get_string_member ("bright_magenta"),
+                    light.get_string_member ("bright_cyan"),
+                    light.get_string_member ("bright_white"),
+                    dark.get_string_member ("foreground_color"),
+                    dark.get_string_member ("background_color"),
+                    dark.get_string_member ("bold_color"),
+                    dark.get_string_member ("cursor_color"),
+                    dark.get_string_member ("highlight_color"),
+                    dark.get_string_member ("black"),
+                    dark.get_string_member ("red"),
+                    dark.get_string_member ("green"),
+                    dark.get_string_member ("yellow"),
+                    dark.get_string_member ("blue"),
+                    dark.get_string_member ("magenta"),
+                    dark.get_string_member ("cyan"),
+                    dark.get_string_member ("white"),
+                    dark.get_string_member ("bright_black"),
+                    dark.get_string_member ("bright_red"),
+                    dark.get_string_member ("bright_green"),
+                    dark.get_string_member ("bright_yellow"),
+                    dark.get_string_member ("bright_blue"),
+                    dark.get_string_member ("bright_magenta"),
+                    dark.get_string_member ("bright_cyan"),
+                    dark.get_string_member ("bright_white")
+                    );
             } catch (GLib.Error e) {
                 return null;
             }
         }
 
-        public static StColorScheme? new_from_id(string id) {
-            var available_schemes = get_available_schemes();
-            if (available_schemes.has_key(id)) {
-                return new_from_json(available_schemes[id]);
+        public static StColorScheme? new_from_id (string id) {
+            var available_schemes = get_available_schemes ();
+            if (available_schemes.has_key (id)) {
+                return new_from_json (available_schemes[id]);
             }
             return null;
         }
     }
-    
-    public string[] get_scheme_dirs() {
+
+    public string[] get_scheme_dirs () {
         string[] scheme_dirs = {};
 
         // Add user-local themes directory first
-        string user_dir = GLib.Environment.get_user_data_dir();
-        if (GLib.FileUtils.test(user_dir, GLib.FileTest.IS_DIR)) {
+        string user_dir = GLib.Environment.get_user_data_dir ();
+        if (GLib.FileUtils.test (user_dir, GLib.FileTest.IS_DIR)) {
             scheme_dirs += (user_dir + "/stillTerminal/themes");
         }
 
         // Add system themes directories (contains both built-in and admin-installed schemes)
         foreach (string dir in GLib.Environment.get_system_data_dirs ()) {
-            if (GLib.FileUtils.test(dir, GLib.FileTest.IS_DIR)) {
+            if (GLib.FileUtils.test (dir, GLib.FileTest.IS_DIR)) {
                 scheme_dirs += (dir + "/stillTerminal/themes");
             }
         }
@@ -411,68 +411,68 @@ namespace StillTerminal {
         Gee.HashMap<string, string> available_schemes = new Gee.HashMap<string, string>();
 
         // Load schemes from system directories (both built-in and user-defined)
-        string[] dirs = get_scheme_dirs();
+        string[] dirs = get_scheme_dirs ();
         try {
             foreach (string dir_path in dirs) {
-                if (GLib.FileUtils.test(dir_path, GLib.FileTest.IS_DIR)) {
-                    GLib.Dir dir = GLib.Dir.open(dir_path);
-                    string? filename = dir.read_name();
+                if (GLib.FileUtils.test (dir_path, GLib.FileTest.IS_DIR)) {
+                    GLib.Dir dir = GLib.Dir.open (dir_path);
+                    string? filename = dir.read_name ();
                     while (filename != null) {
-                        if (filename.has_suffix(".json")) {
+                        if (filename.has_suffix (".json")) {
                             string full_path = dir_path + "/" + filename;
                             // try loading json to check if it's valid
                             try {
-                                Json.Parser parser = new Json.Parser();
-                                parser.load_from_file(full_path);
-                                string id = parser.get_root().get_object().get_string_member("id");
-                                if (StColorScheme.new_from_json(full_path) != null) {
+                                Json.Parser parser = new Json.Parser ();
+                                parser.load_from_file (full_path);
+                                string id = parser.get_root ().get_object ().get_string_member ("id");
+                                if (StColorScheme.new_from_json (full_path) != null) {
                                     available_schemes[id] = full_path;
                                 }
                             } catch (GLib.Error e) {}
                         }
-                        filename = dir.read_name();
+                        filename = dir.read_name ();
                     }
                 }
             }
         } catch (GLib.FileError e) {}
 
         // Ensure Adwaita theme is always available as fallback
-        ensure_default_theme_available(available_schemes);
+        ensure_default_theme_available (available_schemes);
 
         return available_schemes;
     }
 
-    private void ensure_default_theme_available(Gee.HashMap<string, string> available_schemes) {
+    private void ensure_default_theme_available (Gee.HashMap<string, string> available_schemes) {
         // If no Adwaita theme is found, try to create a basic fallback
-        if (!available_schemes.has_key("adwaita")) {
+        if (!available_schemes.has_key ("adwaita")) {
             // Try to find Adwaita in any of the scheme directories
-            string[] dirs = get_scheme_dirs();
+            string[] dirs = get_scheme_dirs ();
             foreach (string dir_path in dirs) {
                 string adwaita_path = dir_path + "/Adwaita.json";
-                if (GLib.FileUtils.test(adwaita_path, GLib.FileTest.EXISTS)) {
+                if (GLib.FileUtils.test (adwaita_path, GLib.FileTest.EXISTS)) {
                     available_schemes["adwaita"] = adwaita_path;
                     break;
                 }
             }
 
             // If Adwaita is still not found, create a basic fallback theme
-            if (!available_schemes.has_key("adwaita")) {
-                create_fallback_theme(available_schemes);
+            if (!available_schemes.has_key ("adwaita")) {
+                create_fallback_theme (available_schemes);
             }
         }
     }
 
-    private void create_fallback_theme(Gee.HashMap<string, string> available_schemes) {
+    private void create_fallback_theme (Gee.HashMap<string, string> available_schemes) {
         // Create a basic fallback theme based on system colors
         // This provides a minimal theme when no schemes are available
         string fallback_path = "";
 
         // Try to save to user directory first, then system directory
-        string[] dirs = get_scheme_dirs();
+        string[] dirs = get_scheme_dirs ();
         foreach (string dir_path in dirs) {
             // Prefer user-writable directories
-            if (dir_path.contains(GLib.Environment.get_user_data_dir())) {
-                if (GLib.FileUtils.test(dir_path, GLib.FileTest.IS_DIR)) {
+            if (dir_path.contains (GLib.Environment.get_user_data_dir ())) {
+                if (GLib.FileUtils.test (dir_path, GLib.FileTest.IS_DIR)) {
                     fallback_path = dir_path + "/Adwaita.json";
                     break;
                 }
@@ -540,7 +540,7 @@ namespace StillTerminal {
                 }
                 """;
 
-                GLib.FileUtils.set_contents(fallback_path, fallback_json);
+                GLib.FileUtils.set_contents (fallback_path, fallback_json);
                 available_schemes["adwaita"] = fallback_path;
             } catch (GLib.FileError e) {
                 // If we can't create the fallback file, continue without it
@@ -549,23 +549,23 @@ namespace StillTerminal {
         }
     }
 
-        public static StColorScheme? get_default_scheme() {
+    public static StColorScheme? get_default_scheme () {
         // Try to load Adwaita theme first
-        var available_schemes = get_available_schemes();
-        if (available_schemes.has_key("adwaita")) {
-            var adwaita_scheme = StColorScheme.new_from_json(available_schemes["adwaita"]);
+        var available_schemes = get_available_schemes ();
+        if (available_schemes.has_key ("adwaita")) {
+            var adwaita_scheme = StColorScheme.new_from_json (available_schemes["adwaita"]);
             if (adwaita_scheme != null) {
                 return adwaita_scheme;
             }
         }
 
         // If Adwaita fails, create a basic fallback scheme
-            return create_basic_fallback_scheme();
+        return create_basic_fallback_scheme ();
     }
 
-    public static StColorScheme? create_basic_fallback_scheme() {
+    public static StColorScheme? create_basic_fallback_scheme () {
         // Create a minimal scheme with system colors
-        return StColorScheme.new_from_colors(
+        return StColorScheme.new_from_colors (
             "fallback", "System Fallback",
             "#000000", "#ffffff", "#000000",  // light: fg, bg, bold
             "#000000", "#add8e6",             // light: cursor, highlight
@@ -575,6 +575,6 @@ namespace StillTerminal {
             "#ffffff", "#4169e1",             // dark: cursor, highlight
             "#000000", "#ff0000", "#00ff00", "#ffff00", "#0000ff", "#ff00ff", "#00ffff", "#ffffff",  // dark colors
             "#808080", "#ff8080", "#80ff80", "#ffff80", "#8080ff", "#ff80ff", "#80ffff", "#ffffff"   // dark bright colors
-        );
+            );
     }
 }

@@ -6,7 +6,7 @@ namespace StillTerminal {
         public bool keep_window_size { get; set; }
         public double cell_height { get; set; }
         public double cell_width { get; set; }
-    
+
         // Appearance
         public string system_color { get; set; }
         public int padding { get; set; }
@@ -14,17 +14,17 @@ namespace StillTerminal {
         public bool use_custom_font { get; set; }
         public string custom_font { get; set; }
         public bool bold_is_bright { get; set; }
-    
+
         // Scroll
         public bool show_scrollbar { get; set; }
         public int scrollback_limit { get; set; }
-    
+
         // Misc
         public bool easy_copy_paste { get; set; }
         public bool notification_on_task { get; set; }
         public string last_profile_id { get; set; }
         public GLib.Settings settings;
-    
+
         public StSettings () {
             settings = new GLib.Settings ("io.stillhq.terminal");
             settings.bind ("window-width", this, "window_width", SettingsBindFlags.DEFAULT);
@@ -44,38 +44,37 @@ namespace StillTerminal {
             settings.bind ("notification-on-task", this, "notification_on_task", SettingsBindFlags.DEFAULT);
             settings.bind ("last-profile-id", this, "last_profile_id", SettingsBindFlags.DEFAULT);
         }
-  
+
         public void bind_to_vte (StTerminal vte) {
             settings.bind ("cell-height", vte, "cell_height_scale", SettingsBindFlags.DEFAULT);
             settings.bind ("cell-width", vte, "cell_width_scale", SettingsBindFlags.DEFAULT);
             settings.bind ("bold-is-bright", vte, "bold_is_bright", SettingsBindFlags.DEFAULT);
-    
+
             settings.bind ("padding", vte, "margin-start", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", vte, "margin-end", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", vte, "margin-top", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", vte, "margin-bottom", SettingsBindFlags.DEFAULT);
 
-            vte.style_manager.notify["dark"].connect(
+            vte.style_manager.notify["dark"].connect (
                 (_style_manager, _pspec) => {
-                    vte.set_appearance ();
-                }
-            );
+                vte.set_appearance ();
+            }
+                );
 
             if (vte.profile.color_scheme == "system") {
-                this.notify["system-color"].connect(
+                this.notify["system-color"].connect (
                     (_settings, _pspec) => {
-                        vte.set_appearance ();
-                    }
-                );
-                // Removed global container scheme matching binding; now per-profile
+                    vte.set_appearance ();
+                }
+                    );
             }
 
 
-            this.notify["opacity"].connect(
+            this.notify["opacity"].connect (
                 (_settings, _pspec) => {
-                    vte.set_appearance ();
-                }
-            );
+                vte.set_appearance ();
+            }
+                );
         }
 
         public void bind_to_general (StPrefsGeneralPage general) {
@@ -88,32 +87,31 @@ namespace StillTerminal {
             settings.bind ("cell-width", general.cell_spacing_group.cell_width, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", general.appearance_group.padding, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("opacity", general.appearance_group.opacity_setting, "value", SettingsBindFlags.DEFAULT);
-            // Removed global container scheme matching binding
             settings.bind ("use-custom-font", general.appearance_group.use_custom_font, "active", SettingsBindFlags.DEFAULT);
             settings.bind ("use-custom-font", general.appearance_group.custom_font, "sensitive", SettingsBindFlags.DEFAULT);
             settings.bind ("bold-is-bright", general.appearance_group.bold_is_bright, "active", SettingsBindFlags.DEFAULT);
             settings.bind ("show-scrollbar", general.appearance_group.show_scrollbars, "active", SettingsBindFlags.INVERT_BOOLEAN);
 
             // Initialize and keep the row subtitle in sync with setting
-            general.appearance_group.scheme_setting_changed(this.settings, "system-color");
-            settings.changed.connect((key) => {
+            general.appearance_group.scheme_setting_changed (this.settings, "system-color");
+            settings.changed.connect ((key) => {
                 if (key == "system-color") {
-                    general.appearance_group.scheme_setting_changed(this.settings, key);
+                    general.appearance_group.scheme_setting_changed (this.settings, key);
                 }
             });
 
             // Connecting the font button
-            general.appearance_group.font_button.set_font_desc(
-                Pango.FontDescription.from_string(this.custom_font)
-            );
-            general.appearance_group.font_button.notify["font-desc"].connect(
+            general.appearance_group.font_button.set_font_desc (
+                Pango.FontDescription.from_string (this.custom_font)
+                );
+            general.appearance_group.font_button.notify["font-desc"].connect (
                 (_button) => {
-                    general.appearance_group.font_button_changed(this.settings);
-                }
-            );
-            settings.changed.connect((key) => {
+                general.appearance_group.font_button_changed (this.settings);
+            }
+                );
+            settings.changed.connect ((key) => {
                 if (key == "custom-font") {
-                    general.appearance_group.font_setting_changed(this.settings, key);
+                    general.appearance_group.font_setting_changed (this.settings, key);
                 }
             });
         }

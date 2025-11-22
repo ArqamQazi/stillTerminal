@@ -4,7 +4,7 @@ namespace StillTerminal {
         public StPrefsWindowGroup window_group;
         public StPrefsCellSpacingGroup cell_spacing_group;
         public StPrefsAppearanceGroup appearance_group;
-        
+
         public StPrefsGeneralPage (StPrefsDialog dialog) {
             this.dialog = dialog;
             this.window_group = new StPrefsWindowGroup ();
@@ -26,20 +26,20 @@ namespace StillTerminal {
         public Adw.SwitchRow save_window_size;
 
         public StPrefsWindowGroup () {
-            this.set_title("Window Size");
+            this.set_title ("Window Size");
             double max_width;
             double max_height;
             this.get_max_size (out max_width, out max_height);
 
             this.window_width = new Adw.SpinRow.with_range (400, max_width, 5);
             this.window_width.set_title ("Default Window Width");
-            this.window_width.set_subtitle("Default: 600");
-            this.window_width.set_digits(0);
+            this.window_width.set_subtitle ("Default: 600");
+            this.window_width.set_digits (0);
 
             this.window_height = new Adw.SpinRow.with_range (300, max_height, 5);
             this.window_height.set_title ("Default Window Height");
-            this.window_height.set_subtitle("Default: 400");
-            this.window_height.set_digits(0);
+            this.window_height.set_subtitle ("Default: 400");
+            this.window_height.set_digits (0);
 
             this.save_window_size = new Adw.SwitchRow ();
             this.save_window_size.set_title ("Save Window Size");
@@ -52,7 +52,7 @@ namespace StillTerminal {
         public void get_max_size (out double width, out double height) {
             var display = Gdk.Display.get_default ();
             var monitors = display.get_monitors ();
-            var n_monitors = monitors.get_n_items();
+            var n_monitors = monitors.get_n_items ();
             var monitor_index = 0;
             width = 0;
             height = 0;
@@ -76,7 +76,7 @@ namespace StillTerminal {
         public Adw.SpinRow cell_height;
 
         public StPrefsCellSpacingGroup () {
-            this.set_title("Cell Spacing");
+            this.set_title ("Cell Spacing");
 
             this.cell_width = new Adw.SpinRow.with_range (1, 2, 0.05);
             this.cell_width.set_title ("Terminal Cell Width");
@@ -92,8 +92,6 @@ namespace StillTerminal {
     public class StPrefsAppearanceGroup : Adw.PreferencesGroup {
         public bool change_settings = false;
         public Adw.ActionRow system_color_row;
-        // Removed: global container theme matching toggle (now per-profile)
-        // removed: available_scheme_strings
 
         public Adw.SpinRow padding;
         public Adw.SpinRow opacity_setting; // different name to avoid conflict with opacity property
@@ -119,14 +117,20 @@ namespace StillTerminal {
                     var s = new GLib.Settings ("io.stillhq.terminal");
                     s.set_string ("system-color", id);
                     string subtitle = id;
-                    var scheme = StColorScheme.new_from_id(id);
-                    if (scheme != null && scheme.name != null && scheme.name != "") subtitle = scheme.name;
+                    var scheme = StColorScheme.new_from_id (id);
+                    if (scheme != null && scheme.name != null && scheme.name != "") {
+                        subtitle = scheme.name;
+                    }
                     this.system_color_row.set_subtitle (subtitle);
-                    var dlg = this.get_ancestor(typeof(Adw.PreferencesDialog)) as Adw.PreferencesDialog;
-                    if (dlg != null) dlg.pop_subpage ();
+                    var dlg = this.get_ancestor (typeof(Adw.PreferencesDialog)) as Adw.PreferencesDialog;
+                    if (dlg != null) {
+                        dlg.pop_subpage ();
+                    }
                 });
-                var dlg = this.get_ancestor(typeof(Adw.PreferencesDialog)) as Adw.PreferencesDialog;
-                if (dlg != null) dlg.push_subpage (picker);
+                var dlg = this.get_ancestor (typeof(Adw.PreferencesDialog)) as Adw.PreferencesDialog;
+                if (dlg != null) {
+                    dlg.push_subpage (picker);
+                }
             });
             this.system_color_row.add_suffix (open_button);
             this.system_color_row.set_activatable_widget (open_button);
@@ -151,7 +155,7 @@ namespace StillTerminal {
             this.custom_font.set_title ("Custom Font");
             this.font_dialog = new Gtk.FontDialog ();
             this.font_button = new Gtk.FontDialogButton (this.font_dialog);
-            this.font_button.add_css_class("flat");
+            this.font_button.add_css_class ("flat");
             this.font_button.valign = Gtk.Align.CENTER;
             this.custom_font.add_suffix (this.font_button);
             this.custom_font.set_activatable_widget (this.font_button);
@@ -172,7 +176,7 @@ namespace StillTerminal {
 
             var id = settings.get_string (key);
             string subtitle = id;
-            var scheme = StColorScheme.new_from_id(id);
+            var scheme = StColorScheme.new_from_id (id);
             if (scheme != null && scheme.name != null && scheme.name != "") {
                 subtitle = scheme.name;
             }
@@ -180,24 +184,24 @@ namespace StillTerminal {
         }
 
         public void font_button_changed (Settings settings) {
-            string selected_font = this.font_button.get_font_desc ().to_string();
-            if (settings.get_string("custom-font") == selected_font) {
+            string selected_font = this.font_button.get_font_desc ().to_string ();
+            if (settings.get_string ("custom-font") == selected_font) {
                 return;
             }
-    
-            settings.set_string("custom-font", selected_font);
+
+            settings.set_string ("custom-font", selected_font);
         }
-    
+
         public void font_setting_changed (GLib.Settings settings, string key) {
             if (key != "custom-font") {
                 return;
             }
-    
-            var font = settings.get_string(key);
+
+            var font = settings.get_string (key);
             if (font == this.font_button.get_font_desc ().to_string ()) {
                 return;
             }
-            this.font_button.set_font_desc(Pango.FontDescription.from_string(font));
+            this.font_button.set_font_desc (Pango.FontDescription.from_string (font));
         }
     }
 }

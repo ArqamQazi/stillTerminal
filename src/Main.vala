@@ -3,9 +3,9 @@ public class StillTerminal.App : Adw.Application {
 
     // Constructor
     public App () {
-        Object (application_id: "io.stillhq.stillTerminal",
-            flags : GLib.ApplicationFlags.DEFAULT_FLAGS
-        );
+        Object (application_id: "io.stillhq.terminal",
+                flags : GLib.ApplicationFlags.DEFAULT_FLAGS
+                );
         // Ensure libadwaita automatically loads style resources (style.css, etc.)
         this.set_resource_base_path ("/io/stillhq/terminal");
     }
@@ -20,7 +20,7 @@ public class StillTerminal.App : Adw.Application {
             icon_theme.add_resource_path ("/io/stillhq/terminal/icons/symbolic/scalable/apps");
             icon_theme.add_resource_path ("/io/stillhq/terminal/icons/symbolic/scalable/actions");
         }
-        
+
         var win = new MainWindow (this);
         win.present ();
     }

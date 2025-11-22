@@ -13,8 +13,8 @@ namespace StillTerminal {
 
         public StTerminalPage (StSettings settings, StProfile profile) {
             this.terminal = new StTerminal (settings, profile);
-            scrolled_window = new Gtk.ScrolledWindow();
-            scrolled_window.add_css_class("terminal-scrolled-window");
+            scrolled_window = new Gtk.ScrolledWindow ();
+            scrolled_window.add_css_class ("terminal-scrolled-window");
             scrolled_window.set_overlay_scrolling (true);
             this.set_scrollbar_visibility (settings.show_scrollbar);
             scrolled_window.set_child (this.terminal);
@@ -26,7 +26,7 @@ namespace StillTerminal {
                     this.set_scrollbar_visibility (settings.show_scrollbar);
                 }
             });
-            this.set_child(scrolled_window);
+            this.set_child (scrolled_window);
 
             // Context menu
             create_page_actions ();
@@ -76,17 +76,15 @@ namespace StillTerminal {
                 // Position the popover near the click location
 
                 // Position the context menu near the click using current size API
-                int width = this.context_menu.get_width();
-                int height = this.context_menu.get_height();
-                var anchor_rect = Gdk.Rectangle() {
+                int width = this.context_menu.get_width ();
+                int height = this.context_menu.get_height ();
+                var anchor_rect = Gdk.Rectangle () {
                     x = (int) x + width / 2,
                     y = (int) y + height / 2,
                     width = 1, height = 1
                 };
-                context_menu.set_pointing_to(anchor_rect);
-                
-                //  var rect = Gdk.Rectangle () { x = (int) x, y = (int) y, width = 1, height = 1 };
-                //  context_menu.set_pointing_to (rect);
+                context_menu.set_pointing_to (anchor_rect);
+
                 context_menu.popup ();
             });
             this.terminal.add_controller (right_click_gesture);
@@ -150,7 +148,9 @@ namespace StillTerminal {
 
         private void update_context_actions () {
             bool input_enabled = this.terminal.get_input_enabled ();
-            if (paste_action != null) paste_action.set_enabled (input_enabled);
+            if (paste_action != null) {
+                paste_action.set_enabled (input_enabled);
+            }
         }
     }
 }
