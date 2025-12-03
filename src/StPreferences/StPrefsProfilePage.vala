@@ -8,6 +8,9 @@ namespace StillTerminal {
         Adw.ActionRow[] system_rows = {};
         Adw.ActionRow[] container_rows = {};
         Adw.ActionRow[] ssh_rows = {};
+        private Adw.ActionRow? system_empty_row = null;
+        private Adw.ActionRow? containers_empty_row = null;
+        private Adw.ActionRow? ssh_empty_row = null;
 
         public StPrefsProfilePage (StPrefsDialog dialog) {
             this.dialog = dialog;
@@ -324,6 +327,20 @@ namespace StillTerminal {
                 this.ssh_group.remove (row);
             }
 
+            // Clear empty placeholder rows
+            if (this.system_empty_row != null) {
+                this.system_group.remove (this.system_empty_row);
+                this.system_empty_row = null;
+            }
+            if (this.containers_empty_row != null) {
+                this.containers_group.remove (this.containers_empty_row);
+                this.containers_empty_row = null;
+            }
+            if (this.ssh_empty_row != null) {
+                this.ssh_group.remove (this.ssh_empty_row);
+                this.ssh_empty_row = null;
+            }
+
             this.system_rows = {};
             this.container_rows = {};
             this.ssh_rows = {};
@@ -368,10 +385,32 @@ namespace StillTerminal {
                 }
             }
 
+            // Add "no profiles exist" placeholders to empty groups
+            if (this.system_rows.length == 0) {
+                this.system_empty_row = new Adw.ActionRow ();
+                this.system_empty_row.title = "No System Profiles Exist";
+                this.system_empty_row.sensitive = false;
+                this.system_group.add (this.system_empty_row);
+            }
+
+            if (this.container_rows.length == 0) {
+                this.containers_empty_row = new Adw.ActionRow ();
+                this.containers_empty_row.title = "No Container Profiles Exist";
+                this.containers_empty_row.sensitive = false;
+                this.containers_group.add (this.containers_empty_row);
+            }
+
+            if (this.ssh_rows.length == 0) {
+                this.ssh_empty_row = new Adw.ActionRow ();
+                this.ssh_empty_row.title = "No Remote Profiles Exist";
+                this.ssh_empty_row.sensitive = false;
+                this.ssh_group.add (this.ssh_empty_row);
+            }
+
             // Add a single nameless group with one "Add Container Profile" option
             this.add_single_container_add_row ();
 
-            // Always show groups so users can access "New Profile" action rows
+            // Always show groups
             this.system_group.visible = true;
             this.containers_group.visible = true;
             this.ssh_group.visible = true;
@@ -386,8 +425,7 @@ namespace StillTerminal {
             // Intentionally no title/description for a nameless group
 
             var container_new_row = new Adw.ActionRow ();
-            container_new_row.set_title ("Add Profile");
-            container_new_row.set_subtitle ("Create a new terminal profile");
+            container_new_row.set_title ("Create New Profile");
 
             var container_icon = new Gtk.Image.from_icon_name ("list-add-symbolic");
             container_icon.pixel_size = 24;

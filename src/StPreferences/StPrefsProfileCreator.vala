@@ -249,10 +249,10 @@ namespace StillTerminal {
             preferences_page.add (this.pref_group);
 
             Gtk.CheckButton? last_button = null;
-            add_check_button (out last_button, "System Profile", "Use the system profile", "utilities-terminal-symbolic", StProfileType.SYSTEM, null);
+            add_check_button (out last_button, "System Profile", "Regular system terminal environment.", "utilities-terminal-symbolic", StProfileType.SYSTEM, null);
             last_button.set_active (true);
-            add_check_button (out last_button, "Container Profile", "Use a container (Distrobox)", "container-symbolic", StProfileType.DISTROBOX, last_button);
-            add_check_button (out last_button, "SSH Profile", "Connect to a remote server", "remote-terminal-symbolic", StProfileType.SSH, last_button);
+            add_check_button (out last_button, "Container Profile", "Create a container with another Linux distribution environment (via Distrobox).", "container-symbolic", StProfileType.DISTROBOX, last_button);
+            add_check_button (out last_button, "SSH Profile", "Connect to a remote server (via SSH).", "remote-terminal-symbolic", StProfileType.SSH, last_button);
 
             // No explicit Cancel; dialog provides a back button
 

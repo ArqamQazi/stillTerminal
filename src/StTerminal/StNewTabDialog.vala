@@ -1,19 +1,32 @@
 namespace StillTerminal {
     public class StNewTabDialog : GLib.Object {
-        public Adw.PreferencesDialog dialog;
+        public Adw.Dialog dialog;
+        public Adw.NavigationView nav_view;
         public Adw.PreferencesPage page;
         public Adw.PreferencesGroup system;
         public Adw.PreferencesGroup containers;
         public Adw.PreferencesGroup ssh;
-        private Adw.PreferencesGroup creation_group;
+        private Adw.ActionRow system_empty_row;
+        private Adw.ActionRow containers_empty_row;
+        private Adw.ActionRow ssh_empty_row;
         public MainWindow main_window;
 
         public StNewTabDialog (MainWindow main_window) {
             this.main_window = main_window;
-            this.dialog = new Adw.PreferencesDialog ();
+            this.dialog = new Adw.Dialog ();
             this.dialog.title = "Choose New Tab Profile";
             this.dialog.content_width = 600;
             this.dialog.content_height = 500;
+
+            var header_bar = new Adw.HeaderBar ();
+
+            // Add plus button to headerbar
+            var add_button = new Gtk.Button.from_icon_name ("list-add-symbolic");
+            add_button.tooltip_text = "Add Profile";
+            add_button.clicked.connect (() => {
+                this.show_profile_creator ();
+            });
+            header_bar.pack_end (add_button);
 
             page = new Adw.PreferencesPage ();
             page.title = "New Tab Profile";
@@ -35,7 +48,19 @@ namespace StillTerminal {
             page.add (containers);
             page.add (ssh);
 
-            this.dialog.add (page);
+            // Build the main page layout
+            var toolbar_view = new Adw.ToolbarView ();
+            toolbar_view.add_top_bar (header_bar);
+            toolbar_view.set_content (page);
+
+            // Create main navigation page with custom headerbar
+            var main_page = new Adw.NavigationPage.with_tag (toolbar_view, "Choose New Tab Profile", "main");
+
+            // Set up navigation view
+            this.nav_view = new Adw.NavigationView ();
+            this.nav_view.add (main_page);
+
+            this.dialog.set_child (this.nav_view);
 
             load_profiles ();
         }
@@ -43,6 +68,8 @@ namespace StillTerminal {
         public void present (Gtk.Widget parent) {
             this.clear_groups ();
             this.load_profiles ();
+            // Pop to main page in case we're on a subpage
+            this.nav_view.pop_to_tag ("main");
             this.dialog.present (parent);
         }
 
@@ -103,10 +130,29 @@ namespace StillTerminal {
                 }
             }
 
-            // Add "Create New Profile" options to each group at the bottom
-            this.add_create_profile_options ();
+            // Add "no profiles exist" placeholders to empty groups
+            if (system_count == 0) {
+                this.system_empty_row = new Adw.ActionRow ();
+                this.system_empty_row.title = "No System Profiles Exist";
+                this.system_empty_row.sensitive = false;
+                system.add (this.system_empty_row);
+            }
 
-            // Always show groups so users can access "Create New Profile" options
+            if (containers_count == 0) {
+                this.containers_empty_row = new Adw.ActionRow ();
+                this.containers_empty_row.title = "No Container Profiles exist";
+                this.containers_empty_row.sensitive = false;
+                containers.add (this.containers_empty_row);
+            }
+
+            if (ssh_count == 0) {
+                this.ssh_empty_row = new Adw.ActionRow ();
+                this.ssh_empty_row.title = "No profiles exist";
+                this.ssh_empty_row.sensitive = false;
+                ssh.add (this.ssh_empty_row);
+            }
+
+            // Always show groups
             system.visible = true;
             containers.visible = true;
             ssh.visible = true;
@@ -117,10 +163,11 @@ namespace StillTerminal {
             page.remove (system);
             page.remove (containers);
             page.remove (ssh);
-            if (creation_group != null) {
-                page.remove (creation_group);
-                creation_group = null;
-            }
+
+            // Clear empty row references
+            this.system_empty_row = null;
+            this.containers_empty_row = null;
+            this.ssh_empty_row = null;
 
             system = new Adw.PreferencesGroup ();
             system.title = "System";
@@ -180,38 +227,12 @@ namespace StillTerminal {
             return false;
         }
 
-        private void add_create_profile_options () {
-            // Single add container option in its own nameless group
-            creation_group = new Adw.PreferencesGroup ();
-            // Intentionally no title/description for a nameless group
-
-            var container_create_row = new Adw.ActionRow ();
-            container_create_row.title = "Add Profile";
-            container_create_row.subtitle = "Create a new terminal profile";
-
-            var container_add_icon = new Gtk.Image.from_icon_name ("list-add-symbolic");
-            container_add_icon.pixel_size = 24;
-            container_create_row.add_prefix (container_add_icon);
-
-            var container_arrow = new Gtk.Image.from_icon_name ("go-next-symbolic");
-            container_arrow.add_css_class ("dim-label");
-            container_create_row.add_suffix (container_arrow);
-
-            container_create_row.activatable = true;
-            container_create_row.activated.connect (() => {
-                this.show_profile_creator ();
-            });
-
-            creation_group.add (container_create_row);
-            page.add (creation_group);
-        }
-
         private void show_profile_creator () {
             var selector = new StProfileTypeSelectorPage ();
             selector.type_selected.connect ((t) => {
                 this.show_profile_creator_for_type (t);
             });
-            this.dialog.push_subpage (selector);
+            this.nav_view.push (selector);
         }
 
         private void show_profile_creator_for_type (StProfileType profile_type) {
@@ -220,7 +241,7 @@ namespace StillTerminal {
                 this.main_window.add_tab (profile);
                 this.close ();
             });
-            this.dialog.push_subpage (page);
+            this.nav_view.push (page);
         }
     }
 
