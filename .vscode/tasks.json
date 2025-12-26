@@ -1,10 +1,17 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "label": "build debug meson",
+            "label": "meson build",
             "type": "shell",
-            "command": "meson build --buildtype=debug && cd build && ninja"
+            "command": "meson setup build || ninja -C build",
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "ninja",
+            "type": "shell",
+            "command": "ninja -C build",
+            "problemMatcher": ["$gcc"]
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

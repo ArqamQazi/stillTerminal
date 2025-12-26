@@ -1,18 +1,16 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
-            "type": "lldb",
+            "type": "cppdbg",
             "request": "launch",
-            "name": "Debug",
-            "program": "${workspaceFolder}/build/src/stillTerminal",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "build debug meson"
+            "name": "Meson Run",
+            "program": "/bin/bash",
+            "args": [
+                "-c",
+                "meson compile -C build && ninja -C build && ./build/src/still-terminal"
+            ],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
