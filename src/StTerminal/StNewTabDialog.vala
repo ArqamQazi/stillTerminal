@@ -140,14 +140,14 @@ namespace StillTerminal {
 
             if (containers_count == 0) {
                 this.containers_empty_row = new Adw.ActionRow ();
-                this.containers_empty_row.title = "No Container Profiles exist";
+                this.containers_empty_row.title = "No Container Profiles Exist";
                 this.containers_empty_row.sensitive = false;
                 containers.add (this.containers_empty_row);
             }
 
             if (ssh_count == 0) {
                 this.ssh_empty_row = new Adw.ActionRow ();
-                this.ssh_empty_row.title = "No profiles exist";
+                this.ssh_empty_row.title = "No Remote Profiles Exist";
                 this.ssh_empty_row.sensitive = false;
                 ssh.add (this.ssh_empty_row);
             }
