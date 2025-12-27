@@ -1,11 +1,10 @@
 # stillTerminal
 
-A tabbed terminal emulator build for stillOS.
-Right now it supports custom themes and profiles, in the future it will support integrating with ssh and distrobox containers.
+A tabbed terminal emulator build for stillOS. Integrates beautilfully with SSH and DistroBox.
+stillTerminal icon by [Delphic Melody](https://linksta.cc/@delphic-melody)
 
-![image](https://github.com/user-attachments/assets/ea528cb0-2905-4e87-9b29-37c992a18c19)
+![image](https://gitlab.com/stillhq/stillTerminal/-/raw/main/assets/Screenshot_From_2025-12-26_19-39-57.png)
 
-A terminal emulator for stillOS that integrates with containers.
 
 ## Build instructions:
 
