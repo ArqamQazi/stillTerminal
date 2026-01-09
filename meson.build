@@ -3,3 +3,4 @@ project('stillTerminal', 'vala', 'c', version: '0.0.1', default_options: ['warni
 add_project_arguments(['--enable-experimental'], language: 'vala')
 
 subdir('src')
+subdir('st-distrobox')
