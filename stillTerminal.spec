@@ -1,6 +1,6 @@
 Name:           still-terminal
 Version:        0.1
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        A tabbed terminal emulator for stillOS
 
 License:        GPL-3.0-or-later
@@ -47,6 +47,7 @@ and distrobox container integration.
 %files
 %doc README.md
 %{_bindir}/still-terminal
+%{_bindir}/st-distrobox
 %{_datadir}/stillTerminal/
 %{_datadir}/applications/io.stillhq.terminal.desktop
 %{_datadir}/glib-2.0/schemas/io.stillhq.terminal.gschema.xml
