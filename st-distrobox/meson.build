@@ -1,5 +1,3 @@
-project('st-distrobox', version: '0.1.0')
-
 # Install the Bash rewrite as the runtime helper
 install_data(
   'st-distrobox.sh',
