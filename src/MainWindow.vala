@@ -11,7 +11,7 @@ namespace StillTerminal {
 
         public MainWindow (Adw.Application app, bool create_initial_tab = true) {
             Object (application: app);
-            this.set_title ("stillTerminal");
+            this.set_title("stillTerminal");
 
             this.settings = new StillTerminal.StSettings ();
             this.default_height = this.settings.window_height;
@@ -312,7 +312,6 @@ namespace StillTerminal {
                 set_window_title (tab_page);
             }
 
-        }
             page.terminal.set_tab_page (tab_page);
 
             // If title is empty (e.g. moved tab might need refresh), try to set it from profile
