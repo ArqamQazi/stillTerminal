@@ -67,19 +67,19 @@ namespace StillTerminal {
 
             this.content = this.tab_overview;
 
-            // ACTIONS
+            // ACTIONS (Window-level)
             var new_tab_action = new SimpleAction ("new-tab", null);
             new_tab_action.activate.connect (() => {
                 this.present_new_tab_dialog ();
             });
-            app.add_action (new_tab_action);
+            this.add_action (new_tab_action);
 
             var reopen_last_tab_action = new SimpleAction ("reopen-last-tab", null);
             reopen_last_tab_action.activate.connect (() => {
                 var profile = get_last_or_default_profile ();
                 this.add_tab (profile);
             });
-            app.add_action (reopen_last_tab_action);
+            this.add_action (reopen_last_tab_action);
 
             var close_tab_action = new SimpleAction ("close-tab", null);
             close_tab_action.activate.connect (() => {
@@ -98,7 +98,7 @@ namespace StillTerminal {
                     this.close ();
                 }
             });
-            app.add_action (close_tab_action);
+            this.add_action (close_tab_action);
 
             var next_tab_action = new SimpleAction ("next-tab", null);
             next_tab_action.activate.connect (() => {
@@ -108,7 +108,7 @@ namespace StillTerminal {
                     );
                 this.tab_view.set_selected_page (next_page);
             });
-            app.add_action (next_tab_action);
+            this.add_action (next_tab_action);
 
             var previous_tab_action = new SimpleAction ("previous-tab", null);
             previous_tab_action.activate.connect (() => {
@@ -118,7 +118,7 @@ namespace StillTerminal {
                     );
                 this.tab_view.set_selected_page (previous_page);
             });
-            app.add_action (previous_tab_action);
+            this.add_action (previous_tab_action);
 
             // Window-level copy action (so each window operates on its own terminal)
             var copy_action = new SimpleAction ("copy", null);
@@ -150,7 +150,17 @@ namespace StillTerminal {
                     fullscreen_action.set_state (new Variant.boolean (true));
                 }
             });
-            app.add_action (fullscreen_action);
+            this.add_action (fullscreen_action);
+
+            // Listen for window fullscreen state changes to keep action in sync
+            // This handles cases where the window is unfullscreened by dragging the headerbar
+            this.notify["fullscreened"].connect (() => {
+                bool window_is_fullscreen = this.fullscreened;
+                bool action_state = fullscreen_action.get_state ().get_boolean ();
+                if (window_is_fullscreen != action_state) {
+                    fullscreen_action.set_state (new Variant.boolean (window_is_fullscreen));
+                }
+            });
 
             var new_window_action = new SimpleAction ("new-window", null);
             new_window_action.activate.connect (() => {
@@ -169,7 +179,7 @@ namespace StillTerminal {
                     dialog.present (this);
                 }
             });
-            app.add_action (preferences_action);
+            this.add_action (preferences_action);
 
             var zoom_in_action = new SimpleAction ("zoom-in", null);
             zoom_in_action.activate.connect (() => {
@@ -241,24 +251,31 @@ namespace StillTerminal {
             });
             app.add_action (about_action);
 
-            // Tab overview actions and shortcuts
+            // Tab overview actions and shortcuts (Window-level)
             var tab_overview_toggle_action = new SimpleAction ("tab-overview-toggle", null);
             tab_overview_toggle_action.activate.connect (() => {
                 this.tab_overview.set_open (!this.tab_overview.get_open ());
             });
-            app.add_action (tab_overview_toggle_action);
+            this.add_action (tab_overview_toggle_action);
 
             var tab_overview_open_action = new SimpleAction ("tab-overview-open", null);
             tab_overview_open_action.activate.connect (() => {
                 this.tab_overview.set_open (true);
             });
-            app.add_action (tab_overview_open_action);
+            this.add_action (tab_overview_open_action);
 
-            var tab_overview_close_action = new SimpleAction ("tab-overview-close", null);
-            tab_overview_close_action.activate.connect (() => {
-                this.tab_overview.set_open (false);
+            // Handle Escape key to close tab overview when it's open
+            // This is done with an event controller to avoid capturing Escape when overview is closed
+            var tab_overview_key_controller = new Gtk.EventControllerKey ();
+            this.tab_overview.add_controller (tab_overview_key_controller);
+            tab_overview_key_controller.key_pressed.connect ((keyval, keycode, state) => {
+                // Only handle Escape when tab overview is open
+                if (this.tab_overview.get_open () && keyval == Gdk.Key.Escape) {
+                    this.tab_overview.set_open (false);
+                    return true; // Event handled
+                }
+                return false; // Let event propagate
             });
-            app.add_action (tab_overview_close_action);
 
             var select_all_action = new SimpleAction ("select-all", null);
             select_all_action.activate.connect (() => {

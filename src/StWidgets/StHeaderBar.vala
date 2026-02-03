@@ -126,14 +126,14 @@ namespace StillTerminal {
             // Window
             var window = new GLib.Menu ();
             window.append ("New Window", "app.new-window");
-            var fullscreen_item = new GLib.MenuItem ("Fullscreen", "app.fullscreen");
+            var fullscreen_item = new GLib.MenuItem ("Fullscreen", "win.fullscreen");
             fullscreen_item.set_attribute_value ("toggle-type", new GLib.Variant.string ("checkmark"));
             window.append_item (fullscreen_item);
             root.append_section (null, window);
 
             // App
             var app_menu = new GLib.Menu ();
-            app_menu.append ("Preferences…", "app.preferences");
+            app_menu.append ("Preferences…", "win.preferences");
             app_menu.append ("About stillTerminal", "app.about");
             root.append_section (null, app_menu);
 
@@ -156,7 +156,7 @@ namespace StillTerminal {
         }
 
         private void update_fullscreen_menu_item_label () {
-            var fullscreen_action = this.main_window.get_application ().lookup_action ("fullscreen") as SimpleAction;
+            var fullscreen_action = this.main_window.lookup_action ("fullscreen") as SimpleAction;
             if (fullscreen_action == null) {
                 return;
             }
@@ -195,14 +195,14 @@ namespace StillTerminal {
             // Window section with updated fullscreen item
             var window = new GLib.Menu ();
             window.append ("New Window", "app.new-window");
-            var fullscreen_item = new GLib.MenuItem (label, "app.fullscreen");
+            var fullscreen_item = new GLib.MenuItem (label, "win.fullscreen");
             fullscreen_item.set_attribute_value ("toggle-type", new GLib.Variant.string ("checkmark"));
             window.append_item (fullscreen_item);
             root.append_section (null, window);
 
             // App
             var app_menu = new GLib.Menu ();
-            app_menu.append ("Preferences…", "app.preferences");
+            app_menu.append ("Preferences…", "win.preferences");
             app_menu.append ("About stillTerminal", "app.about");
             root.append_section (null, app_menu);
 

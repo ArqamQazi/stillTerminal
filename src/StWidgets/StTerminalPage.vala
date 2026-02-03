@@ -109,7 +109,7 @@ namespace StillTerminal {
             var section_misc = new GLib.Menu ();
             string ro_label = this.terminal.get_input_enabled () ? "Enable Read-Only" : "Disable Read-Only";
             section_misc.append (ro_label, "page.toggle-read-only");
-            section_misc.append ("Preferences…", "app.preferences");
+            section_misc.append ("Preferences…", "win.preferences");
             root.append_section (null, section_misc);
 
             return root as GLib.MenuModel;

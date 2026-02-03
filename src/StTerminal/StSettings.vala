@@ -119,23 +119,22 @@ namespace StillTerminal {
         }
 
         public void refresh_accelerators (Gtk.Application app) {
-            app.set_accels_for_action ("app.new-tab", settings.get_strv ("shortcut-new-tab"));
-            app.set_accels_for_action ("app.reopen-last-tab", settings.get_strv ("shortcut-reopen-last-tab"));
-            app.set_accels_for_action ("app.close-tab", settings.get_strv ("shortcut-close-tab"));
-            app.set_accels_for_action ("app.next-tab", settings.get_strv ("shortcut-next-tab"));
-            app.set_accels_for_action ("app.previous-tab", settings.get_strv ("shortcut-previous-tab"));
+            app.set_accels_for_action ("win.new-tab", settings.get_strv ("shortcut-new-tab"));
+            app.set_accels_for_action ("win.reopen-last-tab", settings.get_strv ("shortcut-reopen-last-tab"));
+            app.set_accels_for_action ("win.close-tab", settings.get_strv ("shortcut-close-tab"));
+            app.set_accels_for_action ("win.next-tab", settings.get_strv ("shortcut-next-tab"));
+            app.set_accels_for_action ("win.previous-tab", settings.get_strv ("shortcut-previous-tab"));
             app.set_accels_for_action ("win.copy", settings.get_strv ("shortcut-copy"));
             app.set_accels_for_action ("win.paste", settings.get_strv ("shortcut-paste"));
-            app.set_accels_for_action ("app.fullscreen", settings.get_strv ("shortcut-fullscreen"));
+            app.set_accels_for_action ("win.fullscreen", settings.get_strv ("shortcut-fullscreen"));
             app.set_accels_for_action ("app.new-window", settings.get_strv ("shortcut-new-window"));
-            app.set_accels_for_action ("app.preferences", settings.get_strv ("shortcut-preferences"));
+            app.set_accels_for_action ("win.preferences", settings.get_strv ("shortcut-preferences"));
             app.set_accels_for_action ("app.zoom-in", settings.get_strv ("shortcut-zoom-in"));
             app.set_accels_for_action ("app.zoom-out", settings.get_strv ("shortcut-zoom-out"));
             app.set_accels_for_action ("app.select-all", settings.get_strv ("shortcut-select-all"));
             // Tab overview
-            app.set_accels_for_action ("app.tab-overview-toggle", settings.get_strv ("shortcut-tab-overview-toggle"));
-            app.set_accels_for_action ("app.tab-overview-open", settings.get_strv ("shortcut-tab-overview-open"));
-            app.set_accels_for_action ("app.tab-overview-close", settings.get_strv ("shortcut-tab-overview-close"));
+            app.set_accels_for_action ("win.tab-overview-toggle", settings.get_strv ("shortcut-tab-overview-toggle"));
+            app.set_accels_for_action ("win.tab-overview-open", settings.get_strv ("shortcut-tab-overview-open"));
         }
 
         public void bind_to_shortcut_controller (ShortcutController controller) {
@@ -154,7 +153,6 @@ namespace StillTerminal {
             settings.bind ("shortcut-select-all", controller, "select-all", SettingsBindFlags.DEFAULT);
             settings.bind ("shortcut-tab-overview-toggle", controller, "tab-overview-toggle", SettingsBindFlags.DEFAULT);
             settings.bind ("shortcut-tab-overview-open", controller, "tab-overview-open", SettingsBindFlags.DEFAULT);
-            settings.bind ("shortcut-tab-overview-close", controller, "tab-overview-close", SettingsBindFlags.DEFAULT);
         }
     }
 }
