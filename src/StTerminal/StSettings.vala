@@ -23,6 +23,7 @@ namespace StillTerminal {
         public bool easy_copy_paste { get; set; }
         public bool notification_on_task { get; set; }
         public string last_profile_id { get; set; }
+        public bool warn_on_paste { get; set; }
         public GLib.Settings settings;
 
         public StSettings () {
@@ -43,6 +44,7 @@ namespace StillTerminal {
             settings.bind ("scrollback-limit", this, "scrollback_limit", SettingsBindFlags.DEFAULT);
             settings.bind ("notification-on-task", this, "notification_on_task", SettingsBindFlags.DEFAULT);
             settings.bind ("last-profile-id", this, "last_profile_id", SettingsBindFlags.DEFAULT);
+            settings.bind ("warn-on-paste", this, "warn_on_paste", SettingsBindFlags.DEFAULT);
         }
 
         public void bind_to_vte (StTerminal vte) {
@@ -122,8 +124,8 @@ namespace StillTerminal {
             app.set_accels_for_action ("app.close-tab", settings.get_strv ("shortcut-close-tab"));
             app.set_accels_for_action ("app.next-tab", settings.get_strv ("shortcut-next-tab"));
             app.set_accels_for_action ("app.previous-tab", settings.get_strv ("shortcut-previous-tab"));
-            app.set_accels_for_action ("app.copy", settings.get_strv ("shortcut-copy"));
-            app.set_accels_for_action ("app.paste", settings.get_strv ("shortcut-paste"));
+            app.set_accels_for_action ("win.copy", settings.get_strv ("shortcut-copy"));
+            app.set_accels_for_action ("win.paste", settings.get_strv ("shortcut-paste"));
             app.set_accels_for_action ("app.fullscreen", settings.get_strv ("shortcut-fullscreen"));
             app.set_accels_for_action ("app.new-window", settings.get_strv ("shortcut-new-window"));
             app.set_accels_for_action ("app.preferences", settings.get_strv ("shortcut-preferences"));

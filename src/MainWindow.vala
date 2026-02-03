@@ -120,18 +120,24 @@ namespace StillTerminal {
             });
             app.add_action (previous_tab_action);
 
+            // Window-level copy action (so each window operates on its own terminal)
             var copy_action = new SimpleAction ("copy", null);
             copy_action.activate.connect (() => {
                 // Prefer format-aware copy when available
                 this.get_current_terminal_page ().terminal.copy_clipboard_format (Vte.Format.TEXT);
             });
-            app.add_action (copy_action);
+            this.add_action (copy_action);
 
+            // Window-level paste action with optional warning dialog
             var paste_action = new SimpleAction ("paste", null);
             paste_action.activate.connect (() => {
-                this.get_current_terminal_page ().terminal.paste_clipboard ();
+                if (this.settings.warn_on_paste) {
+                    this.show_paste_warning_dialog ();
+                } else {
+                    this.get_current_terminal_page ().terminal.paste_clipboard ();
+                }
             });
-            app.add_action (paste_action);
+            this.add_action (paste_action);
 
             var fullscreen_action = new SimpleAction.stateful ("fullscreen", null, new Variant.boolean (false));
             fullscreen_action.activate.connect (() => {
@@ -430,6 +436,37 @@ namespace StillTerminal {
                 if (response == "close") {
                     // Force close without checking processes
                     this.force_close ();
+                }
+            });
+
+            dialog.present (this);
+        }
+
+        /**
+         * Show a warning dialog before pasting to remind users about security
+         */
+        private void show_paste_warning_dialog () {
+            var dialog = new Adw.AlertDialog (
+                "Paste from Clipboard?",
+                "Only paste commands from sources you trust. Malicious commands can damage your system or compromise your data."
+                );
+
+            dialog.add_response ("cancel", "_Cancel");
+            dialog.add_response ("paste", "_Paste");
+            dialog.set_response_appearance ("paste", Adw.ResponseAppearance.SUGGESTED);
+            dialog.set_default_response ("paste");
+            dialog.set_close_response ("cancel");
+
+            // Add checkbox to disable future warnings
+            var check_button = new Gtk.CheckButton.with_label ("Don't show this warning again");
+            dialog.set_extra_child (check_button);
+
+            dialog.response.connect ((response) => {
+                if (check_button.active) {
+                    this.settings.warn_on_paste = false;
+                }
+                if (response == "paste") {
+                    this.get_current_terminal_page ().terminal.paste_clipboard ();
                 }
             });
 

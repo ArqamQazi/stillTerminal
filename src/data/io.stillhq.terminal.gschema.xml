@@ -162,5 +162,10 @@
       <summary>Last opened profile id</summary>
       <description>Stores the id of the most recently opened profile to restore as the first tab at startup</description>
     </key>
+    <key name="warn-on-paste" type="b">
+      <default>true</default>
+      <summary>Warn on Paste</summary>
+      <description>Show a warning dialog when pasting commands to remind users to only paste from trusted sources</description>
+    </key>
   </schema>
 </schemalist>

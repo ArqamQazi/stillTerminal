@@ -94,8 +94,8 @@ namespace StillTerminal {
             close_tab_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.close-tab"));
             next_tab_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.next-tab"));
             previous_tab_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.previous-tab"));
-            copy_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.copy"));
-            paste_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.paste"));
+            copy_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("win.copy"));
+            paste_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("win.paste"));
             fullscreen_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.fullscreen"));
             new_window_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.new-window"));
             preferences_shortcut = new Gtk.Shortcut (null, Gtk.ShortcutAction.parse_string ("app.preferences"));

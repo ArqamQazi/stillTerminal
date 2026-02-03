@@ -95,8 +95,8 @@ namespace StillTerminal {
 
             // Clipboard section
             var section_clip = new GLib.Menu ();
-            section_clip.append ("Copy", "app.copy");
-            section_clip.append ("Paste", "app.paste");
+            section_clip.append ("Copy", "win.copy");
+            section_clip.append ("Paste", "win.paste");
             root.append_section (null, section_clip);
 
             // Selection section
