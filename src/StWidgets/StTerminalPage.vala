@@ -10,6 +10,7 @@ namespace StillTerminal {
         private SimpleAction paste_action;
         private SimpleAction select_none_action;
         private SimpleAction toggle_read_only_action;
+        private SimpleAction open_in_file_manager_action;
 
         public StTerminalPage (StSettings settings, StProfile profile) {
             this.terminal = new StTerminal (settings, profile);
@@ -60,7 +61,7 @@ namespace StillTerminal {
             context_menu.set_autohide (true);
             context_menu.set_parent (this.terminal);
             // Ensure the popover is tall enough to avoid internal scrolling
-            context_menu.set_size_request (-1, 232);
+            context_menu.set_size_request (-1, 277);
             context_menu.set_has_arrow (false);
         }
 
@@ -105,6 +106,13 @@ namespace StillTerminal {
             section_select.append ("Select None", "page.select-none");
             root.append_section (null, section_select);
 
+            // File manager section (only for system profiles)
+            if (this.terminal.profile.type == StProfileType.SYSTEM) {
+                var section_file_manager = new GLib.Menu ();
+                section_file_manager.append ("Open Current Directory in File Manager", "page.open-in-file-manager");
+                root.append_section (null, section_file_manager);
+            }
+
             // Misc section
             var section_misc = new GLib.Menu ();
             string ro_label = this.terminal.get_input_enabled () ? "Enable Read-Only" : "Disable Read-Only";
@@ -141,6 +149,20 @@ namespace StillTerminal {
                 update_context_actions ();
             });
             page_action_group.add_action (toggle_read_only_action);
+
+            // Open current directory in file manager
+            open_in_file_manager_action = new SimpleAction ("open-in-file-manager", null);
+            open_in_file_manager_action.activate.connect ((parameter) => {
+                string? uri = this.terminal.get_file_manager_uri ();
+                if (uri != null) {
+                    try {
+                        GLib.AppInfo.launch_default_for_uri (uri, null);
+                    } catch (Error e) {
+                        warning ("Failed to open file manager: %s", e.message);
+                    }
+                }
+            });
+            page_action_group.add_action (open_in_file_manager_action);
 
             // Attach action group to terminal so the popover can resolve actions with prefix "page"
             this.terminal.insert_action_group ("page", page_action_group);

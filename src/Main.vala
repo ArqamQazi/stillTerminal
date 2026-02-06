@@ -4,14 +4,23 @@ public class StillTerminal.App : Adw.Application {
     // Constructor
     public App () {
         Object (application_id: "io.stillhq.terminal",
-                flags : GLib.ApplicationFlags.DEFAULT_FLAGS
+                flags : GLib.ApplicationFlags.HANDLES_COMMAND_LINE
                 );
         // Ensure libadwaita automatically loads style resources (style.css, etc.)
         this.set_resource_base_path ("/io/stillhq/terminal");
+
+        // Register command-line options
+        this.add_main_option (
+            "working-directory", 'w',
+            GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
+            "Set the initial working directory", "DIR"
+            );
     }
 
-    protected override void activate () {
-        // Ensure our bundled icons are available by name
+    protected override void startup () {
+        base.startup ();
+
+        // Ensure our bundled icons are available by name (one-time setup)
         var display = Gdk.Display.get_default ();
         if (display != null) {
             var icon_theme = Gtk.IconTheme.get_for_display (display);
@@ -20,9 +29,31 @@ public class StillTerminal.App : Adw.Application {
             icon_theme.add_resource_path ("/io/stillhq/terminal/icons/symbolic/scalable/apps");
             icon_theme.add_resource_path ("/io/stillhq/terminal/icons/symbolic/scalable/actions");
         }
+    }
 
+    protected override void activate () {
         var win = new MainWindow (this);
         win.present ();
+    }
+
+    protected override int command_line (GLib.ApplicationCommandLine cmdline) {
+        var options = cmdline.get_options_dict ();
+        string? working_dir = null;
+
+        if (options.contains ("working-directory")) {
+            working_dir = options.lookup_value (
+                "working-directory", GLib.VariantType.STRING
+                ).get_string ();
+        }
+
+        if (working_dir != null && working_dir.strip () != "") {
+            var win = new MainWindow (this, true, working_dir);
+            win.present ();
+        } else {
+            this.activate ();
+        }
+
+        return 0;
     }
 
     // No custom file-open handling required currently

@@ -9,7 +9,7 @@ namespace StillTerminal {
         private bool new_tab_dialog_showing = false;
 
 
-        public MainWindow (Adw.Application app, bool create_initial_tab = true) {
+        public MainWindow (Adw.Application app, bool create_initial_tab = true, string? working_directory_override = null) {
             Object (application: app);
             this.set_title("stillTerminal");
 
@@ -52,7 +52,11 @@ namespace StillTerminal {
             box.append (this.tab_view);
 
             if (create_initial_tab) {
-                this.add_tab (get_last_or_default_profile ());
+                var profile = get_default_profile ();
+                if (working_directory_override != null && working_directory_override.strip () != "") {
+                    profile.working_directory = working_directory_override;
+                }
+                this.add_tab (profile);
             }
 
             // Wrap content in a TabOverview so the overview can take over the

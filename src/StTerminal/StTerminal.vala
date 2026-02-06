@@ -280,6 +280,78 @@ namespace StillTerminal {
         }
 
         /**
+         * Get the current working directory of the terminal's deepest child process.
+         * Walks /proc/{pid}/task/{pid}/children to find the innermost process,
+         * then reads its CWD. Only supported for SYSTEM profiles.
+         * @return the current working directory path, or the profile's initial
+         *         working_directory as a fallback
+         */
+        public string? get_current_directory_path () {
+            if (this.profile.type != StProfileType.SYSTEM) {
+                return null;
+            }
+
+            if (this.shell_pid <= 0 || !this.process_running) {
+                return this.profile.working_directory;
+            }
+
+            // Walk the process tree to find the deepest child
+            int current_pid = (int) this.shell_pid;
+            int depth = 0;
+            int max_depth = 20; // Safety limit to avoid infinite loops
+
+            while (depth < max_depth) {
+                try {
+                    string children_path = "/proc/%d/task/%d/children".printf (current_pid, current_pid);
+                    string children_content;
+                    if (GLib.FileUtils.get_contents (children_path, out children_content)) {
+                        string trimmed = children_content.strip ();
+                        if (trimmed.length > 0) {
+                            string[] child_pids = trimmed.split (" ");
+                            if (child_pids.length > 0 && child_pids[0].strip () != "") {
+                                int child_pid = int.parse (child_pids[0].strip ());
+                                if (child_pid > 0) {
+                                    current_pid = child_pid;
+                                    depth++;
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                } catch (Error e) {
+                    break;
+                }
+                break;
+            }
+
+            // Read the CWD of the deepest process
+            try {
+                string cwd = GLib.FileUtils.read_link ("/proc/%d/cwd".printf (current_pid));
+                if (cwd != null && cwd.strip () != "") {
+                    return cwd;
+                }
+            } catch (Error e) {
+                // Fall through to fallback
+            }
+
+            return this.profile.working_directory;
+        }
+
+        /**
+         * Construct a file:// URI for opening the current directory in a
+         * file manager. Only supported for SYSTEM profiles.
+         * @return a URI string suitable for GLib.AppInfo.launch_default_for_uri,
+         *         or null if unsupported or the URI cannot be constructed
+         */
+        public string? get_file_manager_uri () {
+            string? dir = get_current_directory_path ();
+            if (dir != null) {
+                return "file://" + dir;
+            }
+            return null;
+        }
+
+        /**
          * Called when the shell process exits
          * @param status Exit status of the shell
          */
