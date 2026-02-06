@@ -43,6 +43,8 @@ and distrobox container integration.
 
 %install
 %meson_install
+# Nautilus extension (for still-terminal-nautilus subpackage)
+install -Dm644 nautilus/still-terminal-nautilus.py %{buildroot}%{_datadir}/nautilus-python/extensions/still-terminal-nautilus.py
 
 %files
 %doc README.md
@@ -58,6 +60,19 @@ and distrobox container integration.
 
 %postun
 /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &> /dev/null || :
+
+%package nautilus
+Summary:        Nautilus extension for stillTerminal
+BuildArch:      noarch
+Requires:       still-terminal = %{version}-%{release}
+Requires:       nautilus-python
+
+%description nautilus
+Nautilus extension that adds "Open in stillTerminal" to the context menu
+when right-clicking on a folder or the background of a folder.
+
+%files nautilus
+%{_datadir}/nautilus-python/extensions/still-terminal-nautilus.py
 
 %changelog
 * Sun Oct 04 2025 Cameron <cameron@stillhq.io> - 0.0.1-1
