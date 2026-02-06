@@ -109,7 +109,7 @@ namespace StillTerminal {
             // File manager section (only for system profiles)
             if (this.terminal.profile.type == StProfileType.SYSTEM) {
                 var section_file_manager = new GLib.Menu ();
-                section_file_manager.append ("Open Current Directory in File Manager", "page.open-in-file-manager");
+                section_file_manager.append ("Open Current Directory in Files", "page.open-in-file-manager");
                 root.append_section (null, section_file_manager);
             }
 
