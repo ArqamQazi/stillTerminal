@@ -25,11 +25,16 @@ install_data([
   '../../data/schemes/AlmaLinux.json',
   '../../data/schemes/Alpine.json',
   '../../data/schemes/Arch.json',
+  '../../data/schemes/Catppuccin.json',
   '../../data/schemes/CentOS.json',
   '../../data/schemes/Debian.json',
   '../../data/schemes/Fedora.json',
+  '../../data/schemes/Gruvbox.json',
+  '../../data/schemes/Hacker.json',
+  '../../data/schemes/Nord.json',
   '../../data/schemes/OpenSUSE.json',
   '../../data/schemes/RedHat.json',
   '../../data/schemes/Rocky.json',
+  '../../data/schemes/TokyoNight.json',
   '../../data/schemes/Ubuntu.json'
 ], install_dir: get_option('datadir') / 'stillTerminal' / 'themes')

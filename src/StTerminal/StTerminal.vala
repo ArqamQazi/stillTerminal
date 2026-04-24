@@ -1,6 +1,7 @@
 namespace StillTerminal {
     public class StTerminal : Vte.Terminal {
         public signal void press_any_key_close_requested ();
+        public signal void appearance_changed ();
 
         public StProfile profile;
         public Vte.Terminal vte;
@@ -8,6 +9,8 @@ namespace StillTerminal {
         public Pango.FontDescription default_font_desc;
         public Adw.StyleManager style_manager;
         public Adw.TabPage? tab_page;
+        public Gdk.RGBA current_background_color;
+        public Gdk.RGBA current_foreground_color;
         private bool process_running = false;
         private GLib.Pid shell_pid = -1;
         private Gtk.EventControllerKey? close_prompt_controller = null;
@@ -225,6 +228,12 @@ namespace StillTerminal {
                 foreground_color, background_color, palette
                 );
 
+            // Remember current theme colors and notify listeners (e.g. the
+            // header bar) so they can match the terminal's appearance.
+            this.current_background_color = background_color;
+            this.current_foreground_color = foreground_color;
+            this.appearance_changed ();
+
             // Set font
             if (this.settings.use_custom_font) {
                 var font_desc = Pango.FontDescription.from_string (this.settings.custom_font);
@@ -232,6 +241,18 @@ namespace StillTerminal {
             } else {
                 this.set_font (this.default_font_desc);
             }
+        }
+
+        public static string rgba_to_css (Gdk.RGBA color) {
+            int r = (int) (color.red * 255.0f + 0.5f);
+            int g = (int) (color.green * 255.0f + 0.5f);
+            int b = (int) (color.blue * 255.0f + 0.5f);
+            double a = (double) color.alpha;
+            if (r < 0) r = 0; else if (r > 255) r = 255;
+            if (g < 0) g = 0; else if (g > 255) g = 255;
+            if (b < 0) b = 0; else if (b > 255) b = 255;
+            if (a < 0.0) a = 0.0; else if (a > 1.0) a = 1.0;
+            return "rgba(%d,%d,%d,%.3f)".printf (r, g, b, a);
         }
 
         private string? map_container_to_scheme_id (StProfile profile) {

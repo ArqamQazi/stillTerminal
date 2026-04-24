@@ -4,6 +4,7 @@ namespace StillTerminal {
         public int window_width { get; set; }
         public int window_height { get; set; }
         public bool keep_window_size { get; set; }
+        public bool start_maximized { get; set; }
         public double cell_height { get; set; }
         public double cell_width { get; set; }
 
@@ -31,6 +32,7 @@ namespace StillTerminal {
             settings.bind ("window-width", this, "window_width", SettingsBindFlags.DEFAULT);
             settings.bind ("window-height", this, "window_height", SettingsBindFlags.DEFAULT);
             settings.bind ("keep-window-size", this, "keep_window_size", SettingsBindFlags.DEFAULT);
+            settings.bind ("start-maximized", this, "start_maximized", SettingsBindFlags.DEFAULT);
             settings.bind ("use-custom-font", this, "use_custom_font", SettingsBindFlags.DEFAULT);
             settings.bind ("custom-font", this, "custom_font", SettingsBindFlags.DEFAULT);
             settings.bind ("cell-height", this, "cell_height", SettingsBindFlags.DEFAULT);
@@ -85,6 +87,7 @@ namespace StillTerminal {
             settings.bind ("keep-window-size", general.window_group.save_window_size, "active", SettingsBindFlags.DEFAULT);
             settings.bind ("keep-window-size", general.window_group.window_width, "sensitive", SettingsBindFlags.INVERT_BOOLEAN);
             settings.bind ("keep-window-size", general.window_group.window_height, "sensitive", SettingsBindFlags.INVERT_BOOLEAN);
+            settings.bind ("start-maximized", general.window_group.start_maximized, "active", SettingsBindFlags.DEFAULT);
             settings.bind ("cell-height", general.cell_spacing_group.cell_height, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("cell-width", general.cell_spacing_group.cell_width, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", general.appearance_group.padding, "value", SettingsBindFlags.DEFAULT);

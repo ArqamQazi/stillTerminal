@@ -24,6 +24,7 @@ namespace StillTerminal {
         public Adw.SpinRow window_width;
         public Adw.SpinRow window_height;
         public Adw.SwitchRow save_window_size;
+        public Adw.SwitchRow start_maximized;
 
         public StPrefsWindowGroup () {
             this.set_title ("Window Size");
@@ -33,20 +34,25 @@ namespace StillTerminal {
 
             this.window_width = new Adw.SpinRow.with_range (400, max_width, 5);
             this.window_width.set_title ("Default Window Width");
-            this.window_width.set_subtitle ("Default: 600");
+            this.window_width.set_subtitle ("Default: 900");
             this.window_width.set_digits (0);
 
             this.window_height = new Adw.SpinRow.with_range (300, max_height, 5);
             this.window_height.set_title ("Default Window Height");
-            this.window_height.set_subtitle ("Default: 400");
+            this.window_height.set_subtitle ("Default: 600");
             this.window_height.set_digits (0);
 
             this.save_window_size = new Adw.SwitchRow ();
             this.save_window_size.set_title ("Save Window Size");
 
+            this.start_maximized = new Adw.SwitchRow ();
+            this.start_maximized.set_title ("Start Maximized");
+            this.start_maximized.set_subtitle ("Open new windows in a maximized state");
+
             this.add (this.window_width);
             this.add (this.window_height);
             this.add (this.save_window_size);
+            this.add (this.start_maximized);
         }
 
         public void get_max_size (out double width, out double height) {

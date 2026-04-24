@@ -1,26 +1,22 @@
-/* Custom Headerbar COPIED from Blackbox */
-.custom-headerbar {
-    background-color: var(--headerbar-bg-color);
-    color: var(--headerbar-fg-color);
+/* Custom headerbar layout tweaks adapted from Black Box.
+   The widget itself has css name "headerbar", so libadwaita's built-in
+   headerbar styling (windowcontrols, buttons, backdrop transitions) is
+   in effect. The actual background/foreground colors are painted at
+   runtime by StHeaderBar.set_theme_colors() via a per-window provider. */
+
+.custom-headerbar windowhandle > box {
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
-/* Ensure icons inside the custom headerbar inherit the headerbar foreground color */
-.custom-headerbar image,
-.custom-headerbar .image,
-.custom-headerbar button,
-.custom-headerbar button > * {
-    color: var(--headerbar-fg-color);
+.custom-headerbar windowcontrols:not(.empty).start {
+    margin-right: 6px;
 }
 
-.custom-headerbar.backdrop {
-    background-color: var(--headerbar-backdrop-color);
-    transition: background-color 200ms ease-out;
-  }
-  
-  .custom-headerbar.backdrop > windowhandle {
-    filter: opacity(0.5);
-    transition: filter 200ms ease-out;
-  }
+.custom-headerbar windowcontrols:not(.empty).end {
+    margin-left: 6px;
+}
+
 .transparent-window {
     background-color: transparent;
 }

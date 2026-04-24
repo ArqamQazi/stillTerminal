@@ -8,8 +8,43 @@ namespace StillTerminal {
         Gtk.MenuButton menu_button;
         Gtk.Box box;
 
+        private Gtk.CssProvider theme_provider;
+        private string unique_class;
+        private static int instance_counter = 0;
+
+        static construct {
+            // Adopt the native "headerbar" CSS name so libadwaita's default
+            // headerbar rules (windowcontrols, backdrop, button states, ...)
+            // apply to this Adw.Bin. This is the same trick Black Box uses
+            // and it's what keeps the native window buttons working.
+            set_css_name ("headerbar");
+        }
+
         public StHeaderBar (MainWindow main_window) {
             this.main_window = main_window;
+
+            // Per-instance CSS provider so each window can paint its header
+            // to match its currently-selected tab's terminal background.
+            instance_counter++;
+            this.unique_class = "st-headerbar-%d".printf (instance_counter);
+
+            this.theme_provider = new Gtk.CssProvider ();
+            var display = Gdk.Display.get_default ();
+            if (display != null) {
+                Gtk.StyleContext.add_provider_for_display (
+                    display,
+                    this.theme_provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1
+                );
+            }
+
+            // Only the outer headerbar widget gets these classes. Children
+            // inherit styling through the native "headerbar" css name above
+            // so windowcontrols, buttons, and the window handle keep their
+            // stock libadwaita appearance and behavior.
+            this.add_css_class ("custom-headerbar");
+            this.add_css_class ("flat");
+            this.add_css_class (this.unique_class);
 
             // Connect to fullscreen state changes to update menu text
             var fullscreen_action = main_window.get_application ().lookup_action ("fullscreen") as SimpleAction;
@@ -19,16 +54,12 @@ namespace StillTerminal {
                 });
             }
             var window_handle = new Gtk.WindowHandle ();
-            this.add_css_class ("custom-headerbar");
-            window_handle.add_css_class ("custom-headerbar");
             this.child = window_handle;
 
             this.box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
             window_handle.child = this.box;
 
             var start_controls = new Gtk.WindowControls (Gtk.PackType.START);
-            start_controls.add_css_class ("custom-headerbar");
-            start_controls.set_margin_start (5);
             this.box.append (start_controls);
 
             // Tab overview button on the left side of the title bar
@@ -36,7 +67,6 @@ namespace StillTerminal {
             this.tab_overview_button.add_css_class ("flat");
             this.tab_overview_button.remove_css_class ("circular");
             this.tab_overview_button.set_valign (Gtk.Align.CENTER);
-            this.tab_overview_button.set_halign (Gtk.Align.START);
             this.tab_overview_button.set_icon_name ("multitasking-symbolic");
             this.tab_overview_button.clicked.connect (() => {
                 if (this.main_window.tab_overview != null) {
@@ -61,8 +91,18 @@ namespace StillTerminal {
             this.tab_bar.set_hexpand (true);
             this.tab_bar.set_halign (Gtk.Align.FILL);
             this.tab_bar.set_view (this.main_window.tab_view);
-            this.tab_bar.set_margin_end (5);
+            // Black Box's tab bar pattern: the `.inline` style makes the
+            // tab bar background transparent so the headerbar paints through.
+            this.tab_bar.add_css_class ("inline");
             tab_overlay.add_overlay (this.tab_bar);
+
+            // Only show the centered window title when a single tab is open.
+            // Otherwise the tab bar covers the same area and the title bleeds
+            // through behind the tabs.
+            this.update_title_visibility ();
+            this.main_window.tab_view.notify["n-pages"].connect (() => {
+                this.update_title_visibility ();
+            });
 
             this.new_tab_button = new Gtk.Button.from_icon_name ("list-add-symbolic");
             this.new_tab_button.valign = Gtk.Align.CENTER;
@@ -93,7 +133,6 @@ namespace StillTerminal {
             this.menu_button = new Gtk.MenuButton ();
             this.menu_button.set_icon_name ("menu-large-symbolic");
             this.menu_button.add_css_class ("flat");
-            this.menu_button.set_margin_end (5);
             this.menu_button.vexpand = true;
             this.menu_button.set_valign (Gtk.Align.CENTER);
 
@@ -141,9 +180,14 @@ namespace StillTerminal {
             this.box.append (this.menu_button);
 
             var end_controls = new Gtk.WindowControls (Gtk.PackType.END);
-            end_controls.set_margin_end (5);
-            end_controls.add_css_class ("custom-headerbar");
             this.box.append (end_controls);
+        }
+
+        private void update_title_visibility () {
+            if (this.main_window == null || this.window_title == null) {
+                return;
+            }
+            this.window_title.visible = (this.main_window.tab_view.n_pages <= 1);
         }
 
         public void add_button_to_box (Gtk.Button button) {
@@ -153,6 +197,51 @@ namespace StillTerminal {
             button.vexpand = true;
             button.valign = Gtk.Align.CENTER;
             this.box.append (button);
+        }
+
+        /**
+         * Paint the header bar with the terminal's background and
+         * foreground colors. Because this widget's css name is "headerbar",
+         * libadwaita's native headerbar styling handles windowcontrols,
+         * buttons, and the tab bar. We only override the background/foreground
+         * (in both focused and :backdrop states, with matching 200ms timings
+         * to line up with Adwaita's own backdrop transition) and disable
+         * Adwaita's :backdrop opacity filter so the title bar keeps the
+         * same colors when the window loses focus.
+         */
+        public void set_theme_colors (Gdk.RGBA background, Gdk.RGBA foreground) {
+            string bg_css = StTerminal.rgba_to_css (background);
+            string fg_css = StTerminal.rgba_to_css (foreground);
+            string cls = this.unique_class;
+
+            string css = (
+                ".%1$s,\n" +
+                ".%1$s:backdrop {\n" +
+                "  background-color: %2$s;\n" +
+                "  color: %3$s;\n" +
+                "  transition: background-color 200ms ease-out, color 200ms ease-out;\n" +
+                "}\n" +
+                ".%1$s:backdrop > windowhandle {\n" +
+                "  filter: none;\n" +
+                "  transition: filter 200ms ease-out;\n" +
+                "}\n"
+            ).printf (cls, bg_css, fg_css);
+
+            this.theme_provider.load_from_string (css);
+        }
+
+        /**
+         * Remove the per-window CSS provider from the display. Call this
+         * when the owning window is being destroyed so rules referring to
+         * its unique class do not accumulate.
+         */
+        public void cleanup () {
+            var display = Gdk.Display.get_default ();
+            if (display != null && this.theme_provider != null) {
+                Gtk.StyleContext.remove_provider_for_display (
+                    display, this.theme_provider
+                );
+            }
         }
 
         private void update_fullscreen_menu_item_label () {

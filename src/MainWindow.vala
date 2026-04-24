@@ -7,6 +7,8 @@ namespace StillTerminal {
         public StHeaderBar header;
         public ShortcutController shortcuts = new ShortcutController ();
         private bool new_tab_dialog_showing = false;
+        private StTerminal? tracked_terminal = null;
+        private ulong tracked_appearance_handler = 0;
 
 
         public MainWindow (Adw.Application app, bool create_initial_tab = true, string? working_directory_override = null) {
@@ -16,6 +18,9 @@ namespace StillTerminal {
             this.settings = new StillTerminal.StSettings ();
             this.default_height = this.settings.window_height;
             this.default_width = this.settings.window_width;
+            if (this.settings.start_maximized) {
+                this.maximize ();
+            }
             this.add_css_class ("transparent-window");
 
             // Load the CSS file
@@ -39,6 +44,7 @@ namespace StillTerminal {
                     set_window_title (this.tab_view.selected_page);
                     var page = this.tab_view.selected_page.get_child () as StTerminalPage;
                     if (page != null) {
+                        track_terminal_theme (page.terminal);
                         GLib.Idle.add (() => {
                             page.terminal.grab_focus ();
                             return GLib.Source.REMOVE;
@@ -291,6 +297,17 @@ namespace StillTerminal {
 
             // When the last tab is closed, close the application
             this.tab_view.page_detached.connect ((p) => {
+                // If the terminal we were tracking is closed, disconnect our
+                // signal handler so we don't leave a reference to a widget
+                // that has been detached from the view.
+                var detached = p.get_child () as StTerminalPage;
+                if (detached != null && detached.terminal == this.tracked_terminal
+                    && this.tracked_appearance_handler != 0) {
+                    this.tracked_terminal.disconnect (this.tracked_appearance_handler);
+                    this.tracked_appearance_handler = 0;
+                    this.tracked_terminal = null;
+                }
+
                 if (this.tab_view.get_n_pages () == 0) {
                     this.close ();
                 }
@@ -383,6 +400,49 @@ namespace StillTerminal {
             this.header.window_title.set_title (tab_page.title);
         }
 
+        /**
+         * Track the given terminal so the header bar keeps its background
+         * in sync with the terminal's color scheme. Disconnects the handler
+         * from any previously tracked terminal.
+         */
+        private void track_terminal_theme (StTerminal terminal) {
+            if (this.tracked_terminal == terminal) {
+                apply_header_theme_from (terminal);
+                return;
+            }
+
+            if (this.tracked_terminal != null && this.tracked_appearance_handler != 0) {
+                this.tracked_terminal.disconnect (this.tracked_appearance_handler);
+                this.tracked_appearance_handler = 0;
+            }
+
+            this.tracked_terminal = terminal;
+            this.tracked_appearance_handler = terminal.appearance_changed.connect (() => {
+                apply_header_theme_from (terminal);
+            });
+
+            apply_header_theme_from (terminal);
+        }
+
+        private void apply_header_theme_from (StTerminal terminal) {
+            if (terminal == null || this.header == null) {
+                return;
+            }
+            // set_appearance has not run yet on a freshly created terminal.
+            // Skip until the terminal publishes its first set of colors.
+            if (terminal.current_background_color.alpha == 0
+                && terminal.current_background_color.red == 0
+                && terminal.current_background_color.green == 0
+                && terminal.current_background_color.blue == 0
+                && terminal.current_foreground_color.alpha == 0) {
+                return;
+            }
+            this.header.set_theme_colors (
+                terminal.current_background_color,
+                terminal.current_foreground_color
+            );
+        }
+
         private void present_new_tab_dialog () {
             if (this.new_tab_dialog_showing) {
                 return;
@@ -408,7 +468,7 @@ namespace StillTerminal {
         }
 
         public override void size_allocate (int width, int height, int baseline) {
-            if (this.settings.keep_window_size) {
+            if (this.settings.keep_window_size && !this.is_maximized ()) {
                 this.settings.window_width = width;
                 this.settings.window_height = height;
             }
@@ -437,6 +497,11 @@ namespace StillTerminal {
             if (has_running_processes ()) {
                 show_close_confirmation_dialog ();
                 return true; // Prevent close
+            }
+            // The window is actually about to go away: drop the per-window
+            // CSS provider so its rules don't linger on the display.
+            if (this.header != null) {
+                this.header.cleanup ();
             }
             return false; // Allow close
         }
@@ -530,6 +595,9 @@ namespace StillTerminal {
         private void force_close () {
             // Disconnect the close_request handler temporarily to avoid recursion
             this.close_request.disconnect (on_close_request);
+            if (this.header != null) {
+                this.header.cleanup ();
+            }
             this.close ();
         }
 

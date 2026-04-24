@@ -2,12 +2,12 @@
 <schemalist>
   <schema id="io.stillhq.terminal" path="/io/stillhq/terminal/">
     <key name="window-width" type="i">
-      <default>600</default>
+      <default>900</default>
       <summary>Window Width</summary>
       <description>The width of the window.</description>
     </key>
     <key name="window-height" type="i">
-      <default>400</default>
+      <default>600</default>
       <summary>Window Height</summary>
       <description>The height of the window.</description>
     </key>
@@ -15,6 +15,11 @@
       <default>false</default>
       <summary>Keep Window Size</summary>
       <description>Whether to keep the window size between sessions.</description>
+    </key>
+    <key name="start-maximized" type="b">
+      <default>false</default>
+      <summary>Start Maximized</summary>
+      <description>Whether new windows should open maximized.</description>
     </key>
     <key name="use-custom-font" type="b">
       <default>false</default>

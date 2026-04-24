@@ -490,7 +490,7 @@ namespace StillTerminal {
             var emoji_button = new Gtk.Button.with_label ("Emojis");
             emoji_button.add_css_class ("flat");
             emoji_button.set_valign (Gtk.Align.CENTER);
-            emoji_button.clicked.connect (this.on_emoji_picker_clicked);
+            emoji_button.clicked.connect (() => this.on_emoji_picker_clicked (emoji_button));
             button_box.append (emoji_button);
 
             // Clear icon button
@@ -1187,19 +1187,22 @@ namespace StillTerminal {
             }
         }
 
-        private void on_emoji_picker_clicked () {
+        private void on_emoji_picker_clicked (Gtk.Button button) {
+            // Gtk.EmojiChooser is a Gtk.Popover. It must be parented to a
+            // regular widget (not a Gtk.Window) and unparented when dismissed
+            // so repeated invocations don't leak or stack up child popovers.
             var emoji_chooser = new Gtk.EmojiChooser ();
+            emoji_chooser.set_parent (button);
+
             emoji_chooser.emoji_picked.connect ((emoji) => {
                 this.set_icon (emoji);
-                emoji_chooser.popdown ();
             });
 
-            // Position the emoji chooser relative to the button
-            var root = this.get_root () as Gtk.Window;
-            if (root != null) {
-                emoji_chooser.set_parent (root);
-                emoji_chooser.popup ();
-            }
+            emoji_chooser.closed.connect (() => {
+                emoji_chooser.unparent ();
+            });
+
+            emoji_chooser.popup ();
         }
     }
 
