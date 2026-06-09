@@ -1,6 +1,6 @@
 Name:           still-terminal
-Version:        1.0
-Release:        11%{?dist}
+Version:        1.1
+Release:        12%{?dist}
 Summary:        A tabbed terminal emulator for stillOS
 
 License:        GPL-3.0-or-later
@@ -28,6 +28,7 @@ Requires:       vte291-gtk4 >= 0.69.0
 Requires:       libsecret
 Requires:       libgee
 Requires:       json-glib
+Requires:       sshpass
 
 %description
 stillTerminal is a modern tabbed terminal emulator built for stillOS.
