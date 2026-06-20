@@ -360,7 +360,7 @@ namespace StillTerminal {
     public StProfile get_fallback_profile () {
         return new StProfile (
             "system_fallback",
-            "System",
+            _ ("System"),
             "system",
             GLib.Environment.get_home_dir (),
             null,                              // spawn_command
@@ -368,7 +368,7 @@ namespace StillTerminal {
             null,                              // icon_name
             StProfileType.SYSTEM,
             null,                              // type_params
-            "stillOS (Fallback Profile)",
+            _ ("stillOS (Fallback Profile)"),
             StProfile.DEFAULT_SCROLLBACK_LINES
             );
     }
@@ -415,8 +415,8 @@ namespace StillTerminal {
             if (!(profiles_empty)) {
                 var profile = get_fallback_profile ();
                 profile.id = "default";
-                profile.name = "Default";
-                profile.type_subtitle = "stillOS Default Profile";
+                profile.name = _ ("Default");
+                profile.type_subtitle = _ ("stillOS Default Profile");
                 profile.save_to_json (file.get_child ("default.json").get_path ());
             }
         } catch (GLib.FileError e) {

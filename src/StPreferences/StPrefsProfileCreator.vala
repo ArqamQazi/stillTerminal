@@ -11,7 +11,7 @@ namespace StillTerminal {
         public StProfileCreatorTypePage (StPrefsDialog dialog) {
             this.dialog = dialog;
             this.can_pop = false;
-            this.title = "New Profile";
+            this.title = _ ("New Profile");
 
             var header = new Adw.HeaderBar ();
             header.set_show_start_title_buttons (false);
@@ -23,33 +23,33 @@ namespace StillTerminal {
             box.append (preferences_page);
 
             this.pref_group = new Adw.PreferencesGroup ();
-            this.pref_group.set_title ("Select Profile Type");
+            this.pref_group.set_title (_ ("Select Profile Type"));
             preferences_page.add (this.pref_group);
             this.set_child (box);
 
             Gtk.CheckButton? last_button = null;
             add_check_button (
                 out last_button,
-                "System Profile", "Use the system profile",
+                _ ("System Profile"), _ ("Use the system profile"),
                 "utilities-terminal-symbolic",
                 CreationType.SYSTEM, last_button
                 );
             last_button.set_active (true);
             var more_soon = new Adw.ActionRow ();
-            more_soon.set_title ("More Options Coming Soon");
-            more_soon.set_subtitle ("We're working on adding more profile types");
+            more_soon.set_title (_ ("More Options Coming Soon"));
+            more_soon.set_subtitle (_ ("We're working on adding more profile types"));
             this.pref_group.add (more_soon);
 
             add_check_button (
                 out last_button,
-                "Custom Distrobox Profile", "Create a custom distrobox profile",
+                _ ("Custom Distrobox Profile"), _ ("Create a custom distrobox profile"),
                 "container-symbolic",
                 CreationType.CUSTOM_DISTROBOX, last_button
                 );
 
             // No explicit Cancel when a back button exists in the dialog
 
-            var next_button = new Gtk.Button.with_label ("Next");
+            var next_button = new Gtk.Button.with_label (_ ("Next"));
             next_button.add_css_class ("suggested-action");
             next_button.clicked.connect ( () => {
                 next_page ();
@@ -101,7 +101,7 @@ namespace StillTerminal {
 
         public void push_profile_editor (StProfile profile) {
             var editor_page = new StProfileEditorPage (this.dialog, profile);
-            var create_button = new Gtk.Button.with_label ("Create");
+            var create_button = new Gtk.Button.with_label (_ ("Create"));
             create_button.set_sensitive (false);
             create_button.clicked.connect (() => {
                 this.create_profile_button (editor_page);
@@ -130,7 +130,7 @@ namespace StillTerminal {
 
         public StCustomDistroboxCreatorPage (StPrefsDialog dialog) {
             this.dialog = dialog;
-            this.title = "Distrobox Settings";
+            this.title = _ ("Distrobox Settings");
 
             var header = new Adw.HeaderBar ();
             header.set_show_start_title_buttons (false);
@@ -143,33 +143,33 @@ namespace StillTerminal {
             this.set_child (box);
 
             this.group = new Adw.PreferencesGroup ();
-            this.group.set_title ("Container Profile");
+            this.group.set_title (_ ("Container Profile"));
             preferences_page.add (this.group);
 
             // Profile name
             this.name_row = new Adw.EntryRow ();
-            this.name_row.set_title ("Profile Name (Required)");
+            this.name_row.set_title (_ ("Profile Name (Required)"));
             this.name_row.set_text ("Distrobox");
             this.group.add (this.name_row);
 
             this.image_row = new Adw.EntryRow ();
-            this.image_row.set_title ("Image");
+            this.image_row.set_title (_ ("Image"));
             this.image_row.set_text ("docker.io/library/ubuntu:latest");
             this.group.add (this.image_row);
 
             this.advanced_row = new Adw.ExpanderRow ();
-            this.advanced_row.set_title ("Advanced");
-            this.advanced_row.set_subtitle ("Optional extra enter args (space-separated)");
+            this.advanced_row.set_title (_ ("Advanced"));
+            this.advanced_row.set_subtitle (_ ("Optional extra enter args (space-separated)"));
             this.group.add (this.advanced_row);
 
             this.extra_args_row = new Adw.EntryRow ();
-            this.extra_args_row.set_title ("Extra Enter Args");
+            this.extra_args_row.set_title (_ ("Extra Enter Args"));
             this.extra_args_row.set_text ("");
             this.advanced_row.add_row (this.extra_args_row);
 
             // No explicit Back; rely on dialog's built-in back navigation
 
-            var create_button = new Gtk.Button.with_label ("Create");
+            var create_button = new Gtk.Button.with_label (_ ("Create"));
             create_button.add_css_class ("suggested-action");
             create_button.clicked.connect (this.on_create_clicked);
             header.pack_end (create_button);
@@ -213,7 +213,7 @@ namespace StillTerminal {
                 "ubuntu-symbolic",
                 StProfileType.DISTROBOX,
                 params,
-                "Container Environment"
+                _ ("Container Environment")
                 );
 
             // Save and open
@@ -233,7 +233,7 @@ namespace StillTerminal {
 
         public StProfileTypeSelectorSubpage(StPrefsDialog dialog) {
             this.dialog = dialog;
-            this.title = "Select Profile Type";
+            this.title = _ ("Select Profile Type");
 
             var header = new Adw.HeaderBar ();
             header.set_show_start_title_buttons (false);
@@ -249,14 +249,14 @@ namespace StillTerminal {
             preferences_page.add (this.pref_group);
 
             Gtk.CheckButton? last_button = null;
-            add_check_button (out last_button, "System Profile", "Regular system terminal environment.", "utilities-terminal-symbolic", StProfileType.SYSTEM, null);
+            add_check_button (out last_button, _ ("System Profile"), _ ("Regular system terminal environment."), "utilities-terminal-symbolic", StProfileType.SYSTEM, null);
             last_button.set_active (true);
-            add_check_button (out last_button, "Container Profile", "Create a container with another Linux distribution environment (via Distrobox).", "container-symbolic", StProfileType.DISTROBOX, last_button);
-            add_check_button (out last_button, "SSH Profile", "Connect to a remote server (via SSH).", "remote-terminal-symbolic", StProfileType.SSH, last_button);
+            add_check_button (out last_button, _ ("Container Profile"), _ ("Create a container with another Linux distribution environment (via Distrobox)."), "container-symbolic", StProfileType.DISTROBOX, last_button);
+            add_check_button (out last_button, _ ("SSH Profile"), _ ("Connect to a remote server (via SSH)."), "remote-terminal-symbolic", StProfileType.SSH, last_button);
 
             // No explicit Cancel; dialog provides a back button
 
-            var next_button = new Gtk.Button.with_label ("Next");
+            var next_button = new Gtk.Button.with_label (_ ("Next"));
             next_button.add_css_class ("suggested-action");
             next_button.clicked.connect (() => this.type_selected (this.selected_type));
             header.pack_end (next_button);

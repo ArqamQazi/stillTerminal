@@ -5,13 +5,20 @@ sources += gnome.compile_resources('resources',
   c_name: 'resources'
 )
 
+schema = 'io.stillhq.terminal.gschema.xml'
+
 # Install GSchema
-install_data('io.stillhq.terminal.gschema.xml',
+install_data(schema,
   install_dir: get_option('datadir') / 'glib-2.0' / 'schemas'
 )
 
 # Install desktop file
-install_data('io.stillhq.terminal.desktop',
+i18n.merge_file(
+  input: 'io.stillhq.terminal.desktop.in',
+  output: 'io.stillhq.terminal.desktop',
+  type: 'desktop',
+  po_dir: meson.project_source_root() / 'po',
+  install: true,
   install_dir: get_option('datadir') / 'applications'
 )
 

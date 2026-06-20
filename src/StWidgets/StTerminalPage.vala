@@ -60,8 +60,7 @@ namespace StillTerminal {
             context_menu = new Gtk.PopoverMenu.from_model (build_menu_model ());
             context_menu.set_autohide (true);
             context_menu.set_parent (this.terminal);
-            // Ensure the popover is tall enough to avoid internal scrolling
-            context_menu.set_size_request (-1, 277);
+            context_menu.set_size_request (-1, get_context_menu_height ());
             context_menu.set_has_arrow (false);
         }
 
@@ -73,6 +72,7 @@ namespace StillTerminal {
                 update_context_actions ();
                 var model = build_menu_model ();
                 context_menu.set_menu_model (model);
+                context_menu.set_size_request (-1, get_context_menu_height ());
 
                 // Position the popover near the click location
 
@@ -96,31 +96,39 @@ namespace StillTerminal {
 
             // Clipboard section
             var section_clip = new GLib.Menu ();
-            section_clip.append ("Copy", "win.copy");
-            section_clip.append ("Paste", "win.paste");
+            section_clip.append (_ ("Copy"), "win.copy");
+            section_clip.append (_ ("Paste"), "win.paste");
             root.append_section (null, section_clip);
 
             // Selection section
             var section_select = new GLib.Menu ();
-            section_select.append ("Select All", "app.select-all");
-            section_select.append ("Select None", "page.select-none");
+            section_select.append (_ ("Select All"), "app.select-all");
+            section_select.append (_ ("Select None"), "page.select-none");
             root.append_section (null, section_select);
 
             // File manager section (only for system profiles)
             if (this.terminal.profile.type == StProfileType.SYSTEM) {
                 var section_file_manager = new GLib.Menu ();
-                section_file_manager.append ("Open Current Directory in Files", "page.open-in-file-manager");
+                section_file_manager.append (_ ("Open Current Directory in Files"), "page.open-in-file-manager");
                 root.append_section (null, section_file_manager);
             }
 
             // Misc section
             var section_misc = new GLib.Menu ();
-            string ro_label = this.terminal.get_input_enabled () ? "Enable Read-Only" : "Disable Read-Only";
+            string ro_label = this.terminal.get_input_enabled () ? _ ("Enable Read-Only") : _ ("Disable Read-Only");
             section_misc.append (ro_label, "page.toggle-read-only");
-            section_misc.append ("Preferences…", "win.preferences");
+            section_misc.append (_ ("Preferences…"), "win.preferences");
             root.append_section (null, section_misc);
 
             return root as GLib.MenuModel;
+        }
+
+        private int get_context_menu_height () {
+            if (this.terminal.profile.type == StProfileType.SYSTEM) {
+                return 277;
+            }
+
+            return 239;
         }
 
         private void create_page_actions () {
@@ -158,7 +166,7 @@ namespace StillTerminal {
                     try {
                         GLib.AppInfo.launch_default_for_uri (uri, null);
                     } catch (Error e) {
-                        warning ("Failed to open file manager: %s", e.message);
+                        warning (_ ("Failed to open file manager: %s"), e.message);
                     }
                 }
             });

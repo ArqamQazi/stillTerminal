@@ -11,7 +11,7 @@ namespace StillTerminal {
             this.cell_spacing_group = new StPrefsCellSpacingGroup ();
             this.appearance_group = new StPrefsAppearanceGroup ();
 
-            this.set_title ("General");
+            this.set_title (_ ("General"));
             this.set_icon_name ("utilities-terminal-symbolic");
 
             this.add (this.window_group);
@@ -27,27 +27,27 @@ namespace StillTerminal {
         public Adw.SwitchRow start_maximized;
 
         public StPrefsWindowGroup () {
-            this.set_title ("Window Size");
+            this.set_title (_ ("Window Size"));
             double max_width;
             double max_height;
             this.get_max_size (out max_width, out max_height);
 
             this.window_width = new Adw.SpinRow.with_range (400, max_width, 5);
-            this.window_width.set_title ("Default Window Width");
-            this.window_width.set_subtitle ("Default: 900");
+            this.window_width.set_title (_ ("Default Window Width"));
+            this.window_width.set_subtitle (_ ("Default: 900"));
             this.window_width.set_digits (0);
 
             this.window_height = new Adw.SpinRow.with_range (300, max_height, 5);
-            this.window_height.set_title ("Default Window Height");
-            this.window_height.set_subtitle ("Default: 600");
+            this.window_height.set_title (_ ("Default Window Height"));
+            this.window_height.set_subtitle (_ ("Default: 600"));
             this.window_height.set_digits (0);
 
             this.save_window_size = new Adw.SwitchRow ();
-            this.save_window_size.set_title ("Save Window Size");
+            this.save_window_size.set_title (_ ("Save Window Size"));
 
             this.start_maximized = new Adw.SwitchRow ();
-            this.start_maximized.set_title ("Start Maximized");
-            this.start_maximized.set_subtitle ("Open new windows in a maximized state");
+            this.start_maximized.set_title (_ ("Start Maximized"));
+            this.start_maximized.set_subtitle (_ ("Open new windows in a maximized state"));
 
             this.add (this.window_width);
             this.add (this.window_height);
@@ -82,13 +82,13 @@ namespace StillTerminal {
         public Adw.SpinRow cell_height;
 
         public StPrefsCellSpacingGroup () {
-            this.set_title ("Cell Spacing");
+            this.set_title (_ ("Cell Spacing"));
 
             this.cell_width = new Adw.SpinRow.with_range (1, 2, 0.05);
-            this.cell_width.set_title ("Terminal Cell Width");
+            this.cell_width.set_title (_ ("Terminal Cell Width"));
 
             this.cell_height = new Adw.SpinRow.with_range (1, 2, 0.05);
-            this.cell_height.set_title ("Terminal Cell Height");
+            this.cell_height.set_title (_ ("Terminal Cell Height"));
 
             this.add (this.cell_width);
             this.add (this.cell_height);
@@ -109,16 +109,16 @@ namespace StillTerminal {
         public Gtk.FontDialog font_dialog;
 
         public StPrefsAppearanceGroup () {
-            this.set_title ("Appearance");
+            this.set_title (_ ("Appearance"));
 
             // Replace dropdown with a row + button that opens the theme picker page
             this.system_color_row = new Adw.ActionRow ();
-            this.system_color_row.set_title ("System Color Scheme");
-            var open_button = new Gtk.Button.with_label ("Choose…");
+            this.system_color_row.set_title (_ ("System Color Scheme"));
+            var open_button = new Gtk.Button.with_label (_ ("Choose…"));
             open_button.add_css_class ("flat");
             open_button.valign = Gtk.Align.CENTER;
             open_button.clicked.connect (() => {
-                var picker = new StThemePickerPage ("System Theme", false, null);
+                var picker = new StThemePickerPage (_ ("System Theme"), false, null);
                 picker.scheme_selected.connect ((id) => {
                     var s = new GLib.Settings ("io.stillhq.terminal");
                     s.set_string ("system-color", id);
@@ -143,22 +143,22 @@ namespace StillTerminal {
 
 
             this.padding = new Adw.SpinRow.with_range (0, 10, 1);
-            this.padding.set_title ("Padding");
+            this.padding.set_title (_ ("Padding"));
 
             this.opacity_setting = new Adw.SpinRow.with_range (0, 100, 1);
-            this.opacity_setting.set_title ("Opacity");
+            this.opacity_setting.set_title (_ ("Opacity"));
 
             this.bold_is_bright = new Adw.SwitchRow ();
-            this.bold_is_bright.set_title ("Bold is Bright");
+            this.bold_is_bright.set_title (_ ("Bold is Bright"));
 
             this.show_scrollbars = new Adw.SwitchRow ();
-            this.show_scrollbars.set_title ("Hide Scrollbars");
+            this.show_scrollbars.set_title (_ ("Hide Scrollbars"));
 
             this.use_custom_font = new Adw.SwitchRow ();
-            this.use_custom_font.set_title ("Use Custom Font");
+            this.use_custom_font.set_title (_ ("Use Custom Font"));
 
             this.custom_font = new Adw.ActionRow ();
-            this.custom_font.set_title ("Custom Font");
+            this.custom_font.set_title (_ ("Custom Font"));
             this.font_dialog = new Gtk.FontDialog ();
             this.font_button = new Gtk.FontDialogButton (this.font_dialog);
             this.font_button.add_css_class ("flat");

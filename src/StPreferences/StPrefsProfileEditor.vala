@@ -54,15 +54,15 @@ namespace StillTerminal {
             this.available_schemes.move (this.available_schemes.length - 1, 0, 1);
             var preferences_page = new Adw.PreferencesPage ();
             this.pref_group = new Adw.PreferencesGroup ();
-            this.pref_group.set_title ("General");
+            this.pref_group.set_title (_ ("General"));
             preferences_page.add (this.pref_group);
 
             this.ssh_auth_group = new Adw.PreferencesGroup ();
-            this.ssh_auth_group.set_title ("SSH Authentication (Optional)");
+            this.ssh_auth_group.set_title (_ ("SSH Authentication (Optional)"));
             preferences_page.add (this.ssh_auth_group);
 
             this.ssh_options_group = new Adw.PreferencesGroup ();
-            this.ssh_options_group.set_title ("SSH Options");
+            this.ssh_options_group.set_title (_ ("SSH Options"));
             preferences_page.add (this.ssh_options_group);
 
             this.append (preferences_page);
@@ -75,25 +75,25 @@ namespace StillTerminal {
         private void setup_ui_components () {
             // Profile name entry
             this.name_row = new Adw.EntryRow ();
-            this.name_row.set_title ("Profile Name (Required)");
+            this.name_row.set_title (_ ("Profile Name (Required)"));
             this.name_row.set_input_purpose (Gtk.InputPurpose.NAME);
             this.name_row.changed.connect (this.on_field_changed);
             this.pref_group.add (this.name_row);
 
             // Profile type (read-only display)
             this.profile_type = new Adw.ActionRow ();
-            this.profile_type.set_title ("Profile Type");
+            this.profile_type.set_title (_ ("Profile Type"));
             this.profile_type.set_sensitive (false);
             this.pref_group.add (this.profile_type);
 
             // Color scheme picker (button opens theme gallery)
             this.color_scheme_row = new Adw.ActionRow ();
-            this.color_scheme_row.set_title ("Color Scheme");
-            var open_scheme_button = new Gtk.Button.with_label ("Choose…");
+            this.color_scheme_row.set_title (_ ("Color Scheme"));
+            var open_scheme_button = new Gtk.Button.with_label (_ ("Choose…"));
             open_scheme_button.add_css_class ("flat");
             open_scheme_button.valign = Gtk.Align.CENTER;
             open_scheme_button.clicked.connect (() => {
-                var picker = new StThemePickerPage ("Choose Theme", true, this.selected_color_scheme_id);
+                var picker = new StThemePickerPage (_ ("Choose Theme"), true, this.selected_color_scheme_id);
                 picker.scheme_selected.connect ((id) => {
                     this.selected_color_scheme_id = id;
                     this.profile.color_scheme = id;
@@ -116,7 +116,7 @@ namespace StillTerminal {
 
             // Working directory with folder picker
             this.working_directory_row = new Adw.EntryRow ();
-            this.working_directory_row.set_title ("Starting Directory");
+            this.working_directory_row.set_title (_ ("Starting Directory"));
             this.working_directory_row.changed.connect (this.on_field_changed);
             var working_directory_button = new Gtk.Button.from_icon_name ("folder-open-symbolic");
             working_directory_button.add_css_class ("flat");
@@ -128,14 +128,14 @@ namespace StillTerminal {
 
             // Spawn command entry
             this.spawn_command_row = new Adw.EntryRow ();
-            this.spawn_command_row.set_title ("Profile Starting Command");
+            this.spawn_command_row.set_title (_ ("Profile Starting Command"));
             this.spawn_command_row.changed.connect (() => { this.on_field_changed (); this.update_ssh_command_preview (); });
             this.pref_group.add (this.spawn_command_row);
 
             var scrollback_adjustment = new Gtk.Adjustment (StProfile.DEFAULT_SCROLLBACK_LINES, -1, 1000000, 100, 1000, 0);
             this.scrollback_row = new Adw.SpinRow (scrollback_adjustment, 0, 0);
-            this.scrollback_row.set_title ("Scrollback Lines");
-            this.scrollback_row.set_subtitle ("Set -1 for unlimited history");
+            this.scrollback_row.set_title (_ ("Scrollback Lines"));
+            this.scrollback_row.set_subtitle (_ ("Set -1 for unlimited history"));
             this.scrollback_row.set_digits (0);
             this.scrollback_row.set_numeric (true);
             this.scrollback_row.changed.connect (this.on_field_changed);
@@ -153,7 +153,7 @@ namespace StillTerminal {
 
         private void update_color_scheme_row_subtitle () {
             if (this.selected_color_scheme_id == null || this.selected_color_scheme_id == "system") {
-                this.color_scheme_row.set_subtitle ("System Theme");
+                this.color_scheme_row.set_subtitle (_ ("System Theme"));
                 return;
             }
             var scheme = StColorScheme.new_from_id (this.selected_color_scheme_id);
@@ -167,14 +167,14 @@ namespace StillTerminal {
         private void setup_ssh_fields () {
             // SSH Host entry
             this.ssh_host_row = new Adw.EntryRow ();
-            this.ssh_host_row.set_title ("SSH Host (Required)");
+            this.ssh_host_row.set_title (_ ("SSH Host (Required)"));
             this.ssh_host_row.set_input_purpose (Gtk.InputPurpose.URL);
             this.ssh_host_row.changed.connect (() => { this.on_field_changed (); this.update_ssh_command_preview (); });
             this.ssh_options_group.add (this.ssh_host_row);
 
             // SSH User entry
             this.ssh_user_row = new Adw.EntryRow ();
-            this.ssh_user_row.set_title ("SSH Username");
+            this.ssh_user_row.set_title (_ ("SSH Username"));
             this.ssh_user_row.set_input_purpose (Gtk.InputPurpose.NAME);
             this.ssh_user_row.changed.connect (() => { this.on_field_changed (); this.update_ssh_command_preview (); });
             this.ssh_options_group.add (this.ssh_user_row);
@@ -182,7 +182,7 @@ namespace StillTerminal {
             // SSH Port spinner
             var port_adjustment = new Gtk.Adjustment (22, 1, 65535, 1, 10, 0);
             this.ssh_port_row = new Adw.SpinRow (port_adjustment, 0, 0);
-            this.ssh_port_row.set_title ("SSH Port");
+            this.ssh_port_row.set_title (_ ("SSH Port"));
             this.ssh_port_row.set_numeric (true);
             this.ssh_port_row.set_digits (0);
             this.ssh_port_row.set_value (22);
@@ -191,10 +191,10 @@ namespace StillTerminal {
 
             // SSH Private Key file picker
             this.ssh_private_key_row = new Adw.ActionRow ();
-            this.ssh_private_key_row.set_title ("SSH Private Key");
-            this.ssh_private_key_row.set_subtitle ("Select a private key file (optional)");
+            this.ssh_private_key_row.set_title (_ ("SSH Private Key"));
+            this.ssh_private_key_row.set_subtitle (_ ("Select a private key file (optional)"));
 
-            var key_button = new Gtk.Button.with_label ("Choose Key File");
+            var key_button = new Gtk.Button.with_label (_ ("Choose Key File"));
             key_button.add_css_class ("flat");
             key_button.valign = Gtk.Align.CENTER;
             key_button.clicked.connect (this.on_ssh_key_picker_clicked);
@@ -203,26 +203,26 @@ namespace StillTerminal {
             var clear_key_button = new Gtk.Button.from_icon_name ("edit-clear-symbolic");
             clear_key_button.add_css_class ("flat");
             clear_key_button.set_valign (Gtk.Align.CENTER);
-            clear_key_button.set_tooltip_text ("Clear and use default identity");
+            clear_key_button.set_tooltip_text (_ ("Clear and use default identity"));
             clear_key_button.clicked.connect (() => {
                 // Clear stored key path in type_params (if present)
                 if (this.profile.type_params != null && this.profile.type_params.has_key ("ssh_private_key_path")) {
                     this.profile.type_params.unset ("ssh_private_key_path");
                 }
                 // Restore the default subtitle text so the row doesn't look empty
-                this.ssh_private_key_row.set_subtitle ("Select a private key file (optional)");
+                this.ssh_private_key_row.set_subtitle (_ ("Select a private key file (optional)"));
                 this.on_field_changed ();
                 this.update_ssh_command_preview ();
             });
             this.ssh_private_key_row.add_suffix (clear_key_button);
 
             this.ssh_key_dialog = new Gtk.FileDialog ();
-            this.ssh_key_dialog.set_title ("Select SSH Private Key");
+            this.ssh_key_dialog.set_title (_ ("Select SSH Private Key"));
             this.ssh_key_dialog.set_modal (true);
 
             // Set up file filters for key files
             var filter = new Gtk.FileFilter ();
-            filter.name = "SSH Private Keys";
+            filter.name = _ ("SSH Private Keys");
             filter.add_pattern ("*.pem");
             filter.add_pattern ("*.key");
             filter.add_pattern ("id_rsa");
@@ -230,7 +230,7 @@ namespace StillTerminal {
             filter.add_pattern ("id_ecdsa");
 
             var all_files_filter = new Gtk.FileFilter ();
-            all_files_filter.name = "All Files";
+            all_files_filter.name = _ ("All Files");
             all_files_filter.add_pattern ("*");
 
             var filters = new GLib.ListStore (typeof (Gtk.FileFilter));
@@ -243,9 +243,9 @@ namespace StillTerminal {
 
             // Password row (stored securely in keyring)
             this.ssh_password_row = new Adw.PasswordEntryRow ();
-            this.ssh_password_row.set_title ("Password (Stored Securely in GNOME Keyring)");
+            this.ssh_password_row.set_title (_ ("Password (Stored Securely in GNOME Keyring)"));
             this.ssh_password_row.changed.connect (() => { this.on_field_changed (); this.update_ssh_command_preview (); });
-            var pw_button = new Gtk.Button.with_label ("Save to Keyring");
+            var pw_button = new Gtk.Button.with_label (_ ("Save to Keyring"));
             pw_button.add_css_class ("flat");
             pw_button.valign = Gtk.Align.CENTER;
             pw_button.clicked.connect (() => {
@@ -262,7 +262,7 @@ namespace StillTerminal {
 
             // Extra options input
             this.ssh_extra_options_row = new Adw.EntryRow ();
-            this.ssh_extra_options_row.set_title ("Extra SSH Options (Advanced)");
+            this.ssh_extra_options_row.set_title (_ ("Extra SSH Options (Advanced)"));
             // Initialize from type_params (if any)
             this.ssh_extra_options_row.set_text (this.get_type_param_or_empty (this.profile, "ssh_extra_options"));
             this.ssh_extra_options_row.changed.connect (() => { this.on_field_changed (); this.update_ssh_command_preview (); });
@@ -270,7 +270,7 @@ namespace StillTerminal {
 
             // Read-only spawn command preview
             this.ssh_command_preview_row = new Adw.ActionRow ();
-            this.ssh_command_preview_row.set_title ("SSH Command Preview");
+            this.ssh_command_preview_row.set_title (_ ("SSH Command Preview"));
             this.ssh_command_preview_row.set_subtitle ("");
             this.ssh_options_group.add (this.ssh_command_preview_row);
 
@@ -298,7 +298,7 @@ namespace StillTerminal {
 
         private void setup_container_fields () {
             this.container_group = new Adw.PreferencesGroup ();
-            this.container_group.set_title ("Container Options");
+            this.container_group.set_title (_ ("Container Options"));
             this.container_group.set_visible (false);
             var first = this.get_first_child ();
             var page = first as Adw.PreferencesPage;
@@ -308,7 +308,7 @@ namespace StillTerminal {
 
             // Match container theme toggle (per-profile) — placed at top
             this.db_match_theme_switch = new Adw.SwitchRow ();
-            this.db_match_theme_switch.set_title ("Use Container Image Color");
+            this.db_match_theme_switch.set_title (_ ("Use Container Image Color"));
             this.db_match_theme_switch.set_active (true); // default ON
             this.db_match_theme_switch.notify["active"].connect (() => {
                 // When enabling, force scheme to System if not already
@@ -324,24 +324,24 @@ namespace StillTerminal {
 
             // Warning banner/row
             this.db_warning_row = new Adw.ActionRow ();
-            this.db_warning_row.set_title ("Changing Distrobox options will recreate the container on next launch.");
+            this.db_warning_row.set_title (_ ("Changing Distrobox options will recreate the container on next launch."));
             this.db_warning_row.add_css_class ("warning");
             this.db_warning_row.set_activatable (false);
             this.container_group.add (this.db_warning_row);
 
             // Image selector (common images + Custom)
             this.db_image_combo = new Adw.ComboRow ();
-            this.db_image_combo.set_title ("Image");
+            this.db_image_combo.set_title (_ ("Image"));
             string[] image_labels = {
-                "AlmaLinux (latest)",
-                "Alpine (latest)",
-                "Arch Linux (latest)",
-                "CentOS Stream (latest)",
-                "Debian (stable)",
-                "Fedora (latest)",
-                "openSUSE Tumbleweed",
-                "Ubuntu (latest)",
-                "Custom…"
+                _ ("AlmaLinux (latest)"),
+                _ ("Alpine (latest)"),
+                _ ("Arch Linux (latest)"),
+                _ ("CentOS Stream (latest)"),
+                _ ("Debian (stable)"),
+                _ ("Fedora (latest)"),
+                _ ("openSUSE Tumbleweed"),
+                _ ("Ubuntu (latest)"),
+                _ ("Custom…")
             };
             this.db_image_combo.set_model (new Gtk.StringList (image_labels));
             this.db_image_combo.notify["selected"].connect (() => {
@@ -353,7 +353,7 @@ namespace StillTerminal {
 
             // Custom image input (shown only when Custom selected)
             this.db_custom_image_row = new Adw.EntryRow ();
-            this.db_custom_image_row.set_title ("Custom Image Reference");
+            this.db_custom_image_row.set_title (_ ("Custom Image Reference"));
             // Placeholder not supported on EntryRow in our API version; keep title concise
             this.db_custom_image_row.set_visible (false);
             this.db_custom_image_row.changed.connect (this.on_field_changed);
@@ -363,67 +363,67 @@ namespace StillTerminal {
 
             // Advanced options expander (maps to distrobox create)
             this.db_advanced_expander = new Adw.ExpanderRow ();
-            this.db_advanced_expander.set_title ("Advanced Options");
+            this.db_advanced_expander.set_title (_ ("Advanced Options"));
             this.container_group.add (this.db_advanced_expander);
 
             // (switch already added at top)
 
             this.db_additional_packages_row = new Adw.EntryRow ();
-            this.db_additional_packages_row.set_title ("Additional Packages");
+            this.db_additional_packages_row.set_title (_ ("Additional Packages"));
             // no subtitle API on EntryRow in our build; leave title only
             this.db_additional_packages_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_additional_packages_row);
 
             this.db_additional_flags_row = new Adw.EntryRow ();
-            this.db_additional_flags_row.set_title ("Additional Flags");
+            this.db_additional_flags_row.set_title (_ ("Additional Flags"));
             // no subtitle API on EntryRow
             this.db_additional_flags_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_additional_flags_row);
 
             this.db_volumes_row = new Adw.EntryRow ();
-            this.db_volumes_row.set_title ("Volumes");
+            this.db_volumes_row.set_title (_ ("Volumes"));
             // no subtitle API on EntryRow
             this.db_volumes_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_volumes_row);
 
             this.db_init_switch = new Adw.SwitchRow ();
-            this.db_init_switch.set_title ("Use Init Inside Container");
+            this.db_init_switch.set_title (_ ("Use Init Inside Container"));
             this.db_init_switch.notify["active"].connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_init_switch);
 
             this.db_root_switch = new Adw.SwitchRow ();
-            this.db_root_switch.set_title ("Rootful create (use --root)");
+            this.db_root_switch.set_title (_ ("Rootful create (use --root)"));
             this.db_root_switch.notify["active"].connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_root_switch);
 
             this.db_pull_switch = new Adw.SwitchRow ();
-            this.db_pull_switch.set_title ("Always Pull Image (–-pull)");
+            this.db_pull_switch.set_title (_ ("Always Pull Image (–-pull)"));
             this.db_pull_switch.notify["active"].connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_pull_switch);
 
             this.db_home_row = new Adw.EntryRow ();
-            this.db_home_row.set_title ("Custom Home Directory");
+            this.db_home_row.set_title (_ ("Custom Home Directory"));
             this.db_home_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_home_row);
 
             this.db_hostname_row = new Adw.EntryRow ();
-            this.db_hostname_row.set_title ("Hostname");
+            this.db_hostname_row.set_title (_ ("Hostname"));
             this.db_hostname_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_hostname_row);
 
             this.db_platform_row = new Adw.EntryRow ();
-            this.db_platform_row.set_title ("Platform (e.g., linux/arm64)");
+            this.db_platform_row.set_title (_ ("Platform (e.g., linux/arm64)"));
             this.db_platform_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_platform_row);
 
             this.db_pre_init_hooks_row = new Adw.EntryRow ();
-            this.db_pre_init_hooks_row.set_title ("Pre-Init Hooks");
+            this.db_pre_init_hooks_row.set_title (_ ("Pre-Init Hooks"));
             // no subtitle API on EntryRow
             this.db_pre_init_hooks_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_pre_init_hooks_row);
 
             this.db_init_hooks_row = new Adw.EntryRow ();
-            this.db_init_hooks_row.set_title ("Init Hooks");
+            this.db_init_hooks_row.set_title (_ ("Init Hooks"));
             // no subtitle API on EntryRow
             this.db_init_hooks_row.changed.connect (this.on_field_changed);
             this.db_advanced_expander.add_row (this.db_init_hooks_row);
@@ -462,7 +462,7 @@ namespace StillTerminal {
 
         private void setup_icon_picker () {
             this.icon_row = new Adw.ActionRow ();
-            this.icon_row.set_title ("Profile Icon");
+            this.icon_row.set_title (_ ("Profile Icon"));
 
             // Create icon preview stack (shows either emoji label or image)
             this.icon_preview_stack = new Gtk.Stack ();
@@ -480,14 +480,14 @@ namespace StillTerminal {
             var button_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
 
             // Linux distro icons button
-            var distro_button = new Gtk.Button.with_label ("Distro Icons");
+            var distro_button = new Gtk.Button.with_label (_ ("Distro Icons"));
             distro_button.add_css_class ("flat");
             distro_button.set_valign (Gtk.Align.CENTER);
             distro_button.clicked.connect (this.on_distro_icon_picker_clicked);
             button_box.append (distro_button);
 
             // Emoji picker button
-            var emoji_button = new Gtk.Button.with_label ("Emojis");
+            var emoji_button = new Gtk.Button.with_label (_ ("Emojis"));
             emoji_button.add_css_class ("flat");
             emoji_button.set_valign (Gtk.Align.CENTER);
             emoji_button.clicked.connect (() => this.on_emoji_picker_clicked (emoji_button));
@@ -496,7 +496,7 @@ namespace StillTerminal {
             // Clear icon button
             var clear_button = new Gtk.Button.from_icon_name ("edit-clear-symbolic");
             clear_button.add_css_class ("flat");
-            clear_button.tooltip_text = "Clear Icon";
+            clear_button.tooltip_text = _ ("Clear Icon");
             clear_button.clicked.connect (() => {
                 this.set_icon (null);
             });
@@ -560,7 +560,7 @@ namespace StillTerminal {
                 // Private key subtitle
                 string key_path = this.get_type_param_or_empty (profile, "ssh_private_key_path");
                 if (key_path != "") {
-                    this.ssh_private_key_row.set_subtitle ("Selected: " + File.new_for_path (key_path).get_basename ());
+                    this.ssh_private_key_row.set_subtitle (_ ("Selected: %s").printf (File.new_for_path (key_path).get_basename ()));
                 }
 
                 // Extra options
@@ -632,13 +632,13 @@ namespace StillTerminal {
         private string get_profile_type_display_name (StProfileType type) {
             switch (type) {
                 case StProfileType.SYSTEM:
-                    return "System Profile";
+                    return _ ("System Profile");
                 case StProfileType.DISTROBOX:
-                    return "Container Profile";
+                    return _ ("Container Profile");
                 case StProfileType.SSH:
-                    return "Remote SSH Profile";
+                    return _ ("Remote SSH Profile");
                 default:
-                    return "Unknown Profile Type";
+                    return _ ("Unknown Profile Type");
             }
         }
 
@@ -1078,7 +1078,7 @@ namespace StillTerminal {
                         this.profile.type_params = new Gee.HashMap<string, string>();
                     }
                     this.profile.type_params["ssh_private_key_path"] = file.get_path ();
-                    this.ssh_private_key_row.set_subtitle ("Selected: " + file.get_basename ());
+                    this.ssh_private_key_row.set_subtitle (_ ("Selected: %s").printf (file.get_basename ()));
                     this.on_field_changed ();
                     this.update_ssh_command_preview ();
                 }
@@ -1211,7 +1211,7 @@ namespace StillTerminal {
         public signal void icon_selected (string icon_name);
 
         public DistroIconPickerDialog() {
-            this.title = "Choose Distribution Icon";
+            this.title = _ ("Choose Distribution Icon");
             this.default_width = 400;
             this.default_height = 300;
             this.modal = true;
@@ -1281,7 +1281,7 @@ namespace StillTerminal {
 
         public StProfileEditorPage (StPrefsDialog dialog, StProfile profile) {
             this.dialog = dialog;
-            this.title = "Profile Settings";
+            this.title = _ ("Profile Settings");
 
             this.header = new Adw.HeaderBar ();
             this.header.set_show_start_title_buttons (false);

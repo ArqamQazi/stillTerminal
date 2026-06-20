@@ -13,7 +13,7 @@ namespace StillTerminal {
             );
 
         private static string build_label (string profile_id) {
-            return "stillTerminal SSH password (" + profile_id + ")";
+            return _ ("stillTerminal SSH password (%s)").printf (profile_id);
         }
 
         public static bool store_password (string profile_id, string password) {
@@ -30,7 +30,7 @@ namespace StillTerminal {
                     );
                 return true;
             } catch (Error e) {
-                warning ("Failed to store password: %s", e.message);
+                warning (_ ("Failed to store password: %s"), e.message);
                 return false;
             }
         }
@@ -45,7 +45,7 @@ namespace StillTerminal {
                     null
                     );
             } catch (Error e) {
-                warning ("Failed to lookup password: %s", e.message);
+                warning (_ ("Failed to lookup password: %s"), e.message);
                 return null;
             }
         }
@@ -60,7 +60,7 @@ namespace StillTerminal {
                     null
                     );
             } catch (Error e) {
-                warning ("Failed to clear password: %s", e.message);
+                warning (_ ("Failed to clear password: %s"), e.message);
                 return false;
             }
         }
@@ -71,5 +71,3 @@ namespace StillTerminal {
         }
     }
 }
-
-

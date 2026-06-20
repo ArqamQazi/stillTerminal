@@ -14,7 +14,7 @@ namespace StillTerminal {
 
         public StPrefsProfilePage (StPrefsDialog dialog) {
             this.dialog = dialog;
-            this.set_title ("Profiles");
+            this.set_title (_ ("Profiles"));
             this.set_icon_name ("container-terminal-symbolic");
 
             this.setup_profile_groups ();
@@ -24,20 +24,20 @@ namespace StillTerminal {
         private void setup_profile_groups () {
             // System profiles group
             this.system_group = new Adw.PreferencesGroup ();
-            this.system_group.set_title ("System Profiles");
-            this.system_group.set_description ("Terminals accessing your local system");
+            this.system_group.set_title (_ ("System Profiles"));
+            this.system_group.set_description (_ ("Terminals accessing your local system"));
             this.add (system_group);
 
             // Container profiles group
             this.containers_group = new Adw.PreferencesGroup ();
-            this.containers_group.set_title ("Container Profiles");
-            this.containers_group.set_description ("Terminals accessing containerized environments");
+            this.containers_group.set_title (_ ("Container Profiles"));
+            this.containers_group.set_description (_ ("Terminals accessing containerized environments"));
             this.add (containers_group);
 
             // SSH profiles group
             this.ssh_group = new Adw.PreferencesGroup ();
-            this.ssh_group.set_title ("Remote SSH Profiles");
-            this.ssh_group.set_description ("Terminals accessing remote servers");
+            this.ssh_group.set_title (_ ("Remote SSH Profiles"));
+            this.ssh_group.set_description (_ ("Terminals accessing remote servers"));
             this.add (ssh_group);
         }
 
@@ -51,10 +51,10 @@ namespace StillTerminal {
                     blank_profile.type_subtitle = "";
                     break;
                 case StProfileType.DISTROBOX:
-                    blank_profile.type_subtitle = "Container Environment";
+                    blank_profile.type_subtitle = _ ("Container Environment");
                     break;
                 case StProfileType.SSH:
-                    blank_profile.type_subtitle = "Remote Connection";
+                    blank_profile.type_subtitle = _ ("Remote Connection");
                     break;
             }
 
@@ -63,7 +63,7 @@ namespace StillTerminal {
 
         private void push_profile_editor (StProfile profile) {
             var editor_page = new StProfileEditorPage (this.dialog, profile);
-            var create_button = new Gtk.Button.with_label ("Create");
+            var create_button = new Gtk.Button.with_label (_ ("Create"));
             create_button.clicked.connect (() => {
                 this.create_profile_button (editor_page);
             });
@@ -141,12 +141,12 @@ namespace StillTerminal {
             try {
                 GLib.Process.spawn_sync (null, full_argv, null, GLib.SpawnFlags.SEARCH_PATH, null, out stdout, out stderr, out status);
             } catch (GLib.SpawnError e) {
-                print ("Failed to spawn command: %s\n", e.message);
+                print (_ ("Failed to spawn command: %s\n"), e.message);
                 return false;
             }
             if (status != 0) {
                 if (stderr != null && stderr.strip () != "") {
-                    print ("Command failed: %s\n", stderr.strip ());
+                    print (_ ("Command failed: %s\n"), stderr.strip ());
                 }
                 return false;
             }
@@ -155,25 +155,25 @@ namespace StillTerminal {
 
         private void stop_and_remove_distrobox_container (string? container_name) {
             if (container_name == null || container_name.strip () == "") {
-                print ("Warning: Cannot delete container - invalid name\n");
+                print (_ ("Warning: Cannot delete container - invalid name\n"));
                 return;
             }
             string name = this.normalize_container_name (container_name);
             if (name == "") {
-                print ("Warning: Cannot delete container - normalized name is empty\n");
+                print (_ ("Warning: Cannot delete container - normalized name is empty\n"));
                 return;
             }
 
-            print ("Stopping and removing distrobox container: %s\n", name);
+            print (_ ("Stopping and removing distrobox container: %s\n"), name);
             bool stopped = this.run_command (new string[] { "distrobox", "stop", "--yes", name });
             if (!stopped) {
-                print ("Failed to stop distrobox container %s\n", name);
+                print (_ ("Failed to stop distrobox container %s\n"), name);
             }
             bool removed = this.run_command (new string[] { "distrobox", "rm", "-f", "--yes", name });
             if (!removed) {
-                print ("Failed to remove distrobox container %s\n", name);
+                print (_ ("Failed to remove distrobox container %s\n"), name);
             } else {
-                print ("Successfully removed distrobox container: %s\n", name);
+                print (_ ("Successfully removed distrobox container: %s\n"), name);
             }
         }
 
@@ -206,7 +206,7 @@ namespace StillTerminal {
 
                 // Saved successfully
             } catch (Error e) {
-                print ("Error saving profile: %s\n", e.message);
+                print (_ ("Error saving profile: %s\n"), e.message);
 
                 try {
                     // If there was an error, attempt to restore from backup
@@ -216,7 +216,7 @@ namespace StillTerminal {
                         // Restored from backup
                     }
                 } catch (Error restore_error) {
-                    print ("Error restoring from backup: %s\n", restore_error.message);
+                    print (_ ("Error restoring from backup: %s\n"), restore_error.message);
                 }
             }
         }
@@ -224,7 +224,7 @@ namespace StillTerminal {
         public void open_profile_editor (StProfile profile) {
             var profile_editor = new StProfileEditorPage (this.dialog, profile);
 
-            var save_button = new Gtk.Button.with_label ("Save");
+            var save_button = new Gtk.Button.with_label (_ ("Save"));
             save_button.clicked.connect (() => {
                 var edited = profile_editor.get_edited_profile ();
                 bool should_delete = false;
@@ -238,7 +238,7 @@ namespace StillTerminal {
                     // If the container name changed (due to profile rename), we need to delete the old container
                     if (old_container_name != new_container_name) {
                         should_delete = true;
-                        print ("Profile/container name changed from '%s' to '%s', will recreate container\n",
+                        print (_ ("Profile/container name changed from '%s' to '%s', will recreate container\n"),
                                old_container_name, new_container_name);
                     }
 
@@ -262,7 +262,7 @@ namespace StillTerminal {
                             string av = after.has_key (k) ? (after[k] ?? "") : "";
                             if (bv != av) {
                                 should_delete = true;
-                                print ("Container option '%s' changed, will recreate container\n", k);
+                                print (_ ("Container option '%s' changed, will recreate container\n"), k);
                                 break;
                             }
                         }
@@ -285,7 +285,7 @@ namespace StillTerminal {
                 // Group destructive actions on the left of the header and style as destructive
                 var destructive_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
 
-                var remove_button = new Gtk.Button.with_label ("Remove Profile");
+                var remove_button = new Gtk.Button.with_label (_ ("Remove Profile"));
                 remove_button.add_css_class ("destructive-action");
                 remove_button.clicked.connect (() => {
                     if (profile.type == StProfileType.DISTROBOX) {
@@ -388,21 +388,21 @@ namespace StillTerminal {
             // Add "no profiles exist" placeholders to empty groups
             if (this.system_rows.length == 0) {
                 this.system_empty_row = new Adw.ActionRow ();
-                this.system_empty_row.title = "No System Profiles Exist";
+                this.system_empty_row.title = _ ("No System Profiles Exist");
                 this.system_empty_row.sensitive = false;
                 this.system_group.add (this.system_empty_row);
             }
 
             if (this.container_rows.length == 0) {
                 this.containers_empty_row = new Adw.ActionRow ();
-                this.containers_empty_row.title = "No Container Profiles Exist";
+                this.containers_empty_row.title = _ ("No Container Profiles Exist");
                 this.containers_empty_row.sensitive = false;
                 this.containers_group.add (this.containers_empty_row);
             }
 
             if (this.ssh_rows.length == 0) {
                 this.ssh_empty_row = new Adw.ActionRow ();
-                this.ssh_empty_row.title = "No Remote Profiles Exist";
+                this.ssh_empty_row.title = _ ("No Remote Profiles Exist");
                 this.ssh_empty_row.sensitive = false;
                 this.ssh_group.add (this.ssh_empty_row);
             }
@@ -425,7 +425,7 @@ namespace StillTerminal {
             // Intentionally no title/description for a nameless group
 
             var container_new_row = new Adw.ActionRow ();
-            container_new_row.set_title ("Create New Profile");
+            container_new_row.set_title (_ ("Create New Profile"));
 
             var container_icon = new Gtk.Image.from_icon_name ("list-add-symbolic");
             container_icon.pixel_size = 24;

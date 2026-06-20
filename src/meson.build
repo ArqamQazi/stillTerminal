@@ -1,3 +1,13 @@
+config_data = configuration_data()
+config_data.set('GETTEXT_PACKAGE', gettext_package)
+config_data.set('LOCALEDIR', get_option('prefix') / get_option('localedir'))
+
+config_vala = configure_file(
+  input: 'Config.vala.in',
+  output: 'Config.vala',
+  configuration: config_data
+)
+
 sources = files(
   'Constants.vala',
   'Main.vala',
@@ -9,6 +19,8 @@ subdir('data')
 subdir('StTerminal')
 subdir('StWidgets')
 subdir('StPreferences')
+
+sources += config_vala
 
 dependencies = [
   dependency('glib-2.0'),

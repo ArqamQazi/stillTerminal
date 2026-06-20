@@ -81,7 +81,7 @@ namespace StillTerminal {
             tab_overlay.halign = Gtk.Align.FILL;
             this.box.append (tab_overlay);
 
-            this.window_title = new Adw.WindowTitle ("stillTerminal", "");
+            this.window_title = new Adw.WindowTitle (_ ("stillTerminal"), "");
             this.window_title.set_halign (Gtk.Align.CENTER);
             this.window_title.set_margin_top (20);
             this.window_title.set_margin_bottom (19);
@@ -141,15 +141,15 @@ namespace StillTerminal {
 
             // Appearance radio group (System/Light/Dark) using a single stateful action
             var appearance = new GLib.Menu ();
-            var item_system = new GLib.MenuItem ("System", "app.color-scheme");
+            var item_system = new GLib.MenuItem (_ ("System"), "app.color-scheme");
             item_system.set_attribute_value ("target", new GLib.Variant.string ("system"));
             appearance.append_item (item_system);
 
-            var item_light = new GLib.MenuItem ("Light", "app.color-scheme");
+            var item_light = new GLib.MenuItem (_ ("Light"), "app.color-scheme");
             item_light.set_attribute_value ("target", new GLib.Variant.string ("light"));
             appearance.append_item (item_light);
 
-            var item_dark = new GLib.MenuItem ("Dark", "app.color-scheme");
+            var item_dark = new GLib.MenuItem (_ ("Dark"), "app.color-scheme");
             item_dark.set_attribute_value ("target", new GLib.Variant.string ("dark"));
             appearance.append_item (item_dark);
 
@@ -157,23 +157,23 @@ namespace StillTerminal {
 
             // Zoom controls
             var zoom = new GLib.Menu ();
-            zoom.append ("Zoom In", "app.zoom-in");
-            zoom.append ("Zoom Out", "app.zoom-out");
-            zoom.append ("Reset Zoom", "app.zoom-reset");
+            zoom.append (_ ("Zoom In"), "app.zoom-in");
+            zoom.append (_ ("Zoom Out"), "app.zoom-out");
+            zoom.append (_ ("Reset Zoom"), "app.zoom-reset");
             root.append_section (null, zoom);
 
             // Window
             var window = new GLib.Menu ();
-            window.append ("New Window", "app.new-window");
-            var fullscreen_item = new GLib.MenuItem ("Fullscreen", "win.fullscreen");
+            window.append (_ ("New Window"), "app.new-window");
+            var fullscreen_item = new GLib.MenuItem (_ ("Fullscreen"), "win.fullscreen");
             fullscreen_item.set_attribute_value ("toggle-type", new GLib.Variant.string ("checkmark"));
             window.append_item (fullscreen_item);
             root.append_section (null, window);
 
             // App
             var app_menu = new GLib.Menu ();
-            app_menu.append ("Preferences…", "win.preferences");
-            app_menu.append ("About stillTerminal", "app.about");
+            app_menu.append (_ ("Preferences…"), "win.preferences");
+            app_menu.append (_ ("About stillTerminal"), "app.about");
             root.append_section (null, app_menu);
 
             this.menu_button.set_menu_model (root as GLib.MenuModel);
@@ -251,7 +251,7 @@ namespace StillTerminal {
             }
 
             bool is_fullscreen = fullscreen_action.get_state ().get_boolean ();
-            string label = is_fullscreen ? "Leave Fullscreen" : "Fullscreen";
+            string label = is_fullscreen ? _ ("Leave Fullscreen") : _ ("Fullscreen");
 
             // For a more robust solution, we could create a custom menu model
             // that supports dynamic labels, but for now we'll rebuild the menu
@@ -260,15 +260,15 @@ namespace StillTerminal {
 
             // Appearance radio group (preserve current state if possible)
             var appearance = new GLib.Menu ();
-            var item_system = new GLib.MenuItem ("System", "app.color-scheme");
+            var item_system = new GLib.MenuItem (_ ("System"), "app.color-scheme");
             item_system.set_attribute_value ("target", new GLib.Variant.string ("system"));
             appearance.append_item (item_system);
 
-            var item_light = new GLib.MenuItem ("Light", "app.color-scheme");
+            var item_light = new GLib.MenuItem (_ ("Light"), "app.color-scheme");
             item_light.set_attribute_value ("target", new GLib.Variant.string ("light"));
             appearance.append_item (item_light);
 
-            var item_dark = new GLib.MenuItem ("Dark", "app.color-scheme");
+            var item_dark = new GLib.MenuItem (_ ("Dark"), "app.color-scheme");
             item_dark.set_attribute_value ("target", new GLib.Variant.string ("dark"));
             appearance.append_item (item_dark);
 
@@ -276,14 +276,14 @@ namespace StillTerminal {
 
             // Zoom controls
             var zoom = new GLib.Menu ();
-            zoom.append ("Zoom In", "app.zoom-in");
-            zoom.append ("Zoom Out", "app.zoom-out");
-            zoom.append ("Reset Zoom", "app.zoom-reset");
+            zoom.append (_ ("Zoom In"), "app.zoom-in");
+            zoom.append (_ ("Zoom Out"), "app.zoom-out");
+            zoom.append (_ ("Reset Zoom"), "app.zoom-reset");
             root.append_section (null, zoom);
 
             // Window section with updated fullscreen item
             var window = new GLib.Menu ();
-            window.append ("New Window", "app.new-window");
+            window.append (_ ("New Window"), "app.new-window");
             var fullscreen_item = new GLib.MenuItem (label, "win.fullscreen");
             fullscreen_item.set_attribute_value ("toggle-type", new GLib.Variant.string ("checkmark"));
             window.append_item (fullscreen_item);
@@ -291,8 +291,8 @@ namespace StillTerminal {
 
             // App
             var app_menu = new GLib.Menu ();
-            app_menu.append ("Preferences…", "win.preferences");
-            app_menu.append ("About stillTerminal", "app.about");
+            app_menu.append (_ ("Preferences…"), "win.preferences");
+            app_menu.append (_ ("About stillTerminal"), "app.about");
             root.append_section (null, app_menu);
 
             this.menu_button.set_menu_model (root as GLib.MenuModel);

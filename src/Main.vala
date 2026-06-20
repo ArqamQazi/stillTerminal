@@ -13,7 +13,7 @@ public class StillTerminal.App : Adw.Application {
         this.add_main_option (
             "working-directory", 'w',
             GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
-            "Set the initial working directory", "DIR"
+            _ ("Set the initial working directory"), _ ("DIR")
             );
     }
 
@@ -60,6 +60,11 @@ public class StillTerminal.App : Adw.Application {
 }
 
 int main (string[] args) {
+    Intl.setlocale (LocaleCategory.ALL, "");
+    Intl.bindtextdomain (StillTerminal.GETTEXT_PACKAGE, StillTerminal.LOCALEDIR);
+    Intl.bind_textdomain_codeset (StillTerminal.GETTEXT_PACKAGE, "UTF-8");
+    Intl.textdomain (StillTerminal.GETTEXT_PACKAGE);
+
     var my_app = new StillTerminal.App ();
     return my_app.run (args);
 }

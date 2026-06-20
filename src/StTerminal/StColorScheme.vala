@@ -566,7 +566,7 @@ namespace StillTerminal {
     public static StColorScheme? create_basic_fallback_scheme () {
         // Create a minimal scheme with system colors
         return StColorScheme.new_from_colors (
-            "fallback", "System Fallback",
+            "fallback", _ ("System Fallback"),
             "#000000", "#ffffff", "#000000",  // light: fg, bg, bold
             "#000000", "#add8e6",             // light: cursor, highlight
             "#000000", "#ff0000", "#00ff00", "#ffff00", "#0000ff", "#ff00ff", "#00ffff", "#ffffff",  // light colors

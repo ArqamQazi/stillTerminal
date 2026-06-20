@@ -78,7 +78,7 @@ namespace StillTerminal {
                 } else {
                     this.process_running = false;
                     this.shell_pid = -1;
-                    string failure = "Failed to start profile \"%s\": %s".printf (this.profile.name, error.message);
+                    string failure = _ ("Failed to start profile \"%s\": %s").printf (this.profile.name, error.message);
                     show_press_any_key_prompt (failure);
                 }
             }
@@ -118,7 +118,7 @@ namespace StillTerminal {
                     if (shell == null || shell.strip () == "") {
                         shell = "/bin/sh";
                     }
-                    string msg = "echo 'st-distrobox not found in PATH. Please install st-distrobox.'";
+                    string msg = "printf '%s\\n' " + GLib.Shell.quote (_ ("st-distrobox not found in PATH. Please install st-distrobox."));
                     return { shell, "-c", msg + "; exec " + shell };
 
                 case StProfileType.SSH:
@@ -441,9 +441,9 @@ namespace StillTerminal {
 
         private string describe_exit_status (int status) {
             if (status == 0) {
-                return "Process exited normally.";
+                return _ ("Process exited normally.");
             }
-            return "Process exited with status %d.".printf (status);
+            return _ ("Process exited with status %d.").printf (status);
         }
 
         private void show_press_any_key_prompt (string? message) {
@@ -460,10 +460,9 @@ namespace StillTerminal {
                 prompt += message.strip ();
                 prompt += "\r\n";
             }
-            prompt += "Press any key to close this tab...";
+            prompt += _ ("Press any key to close this tab...");
             prompt += "\r\n";
             this.feed (prompt.data);
         }
     }
 }
-

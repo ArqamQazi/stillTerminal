@@ -53,7 +53,7 @@ namespace StillTerminal {
 
         private void populate () {
             if (this.include_system) {
-                this.add_theme_tile ("system", "System Theme", null);
+                this.add_theme_tile ("system", _ ("System Theme"), null);
             }
 
             var schemes = get_available_schemes ();
@@ -275,5 +275,4 @@ namespace StillTerminal {
         }
     }
 }
-
 

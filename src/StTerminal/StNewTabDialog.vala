@@ -14,7 +14,7 @@ namespace StillTerminal {
         public StNewTabDialog (MainWindow main_window) {
             this.main_window = main_window;
             this.dialog = new Adw.Dialog ();
-            this.dialog.title = "Choose New Tab Profile";
+            this.dialog.title = _ ("Choose New Tab Profile");
             this.dialog.content_width = 600;
             this.dialog.content_height = 500;
 
@@ -22,27 +22,27 @@ namespace StillTerminal {
 
             // Add plus button to headerbar
             var add_button = new Gtk.Button.from_icon_name ("list-add-symbolic");
-            add_button.tooltip_text = "Add Profile";
+            add_button.tooltip_text = _ ("Add Profile");
             add_button.clicked.connect (() => {
                 this.show_profile_creator ();
             });
             header_bar.pack_end (add_button);
 
             page = new Adw.PreferencesPage ();
-            page.title = "New Tab Profile";
+            page.title = _ ("New Tab Profile");
             page.icon_name = "io.stillhq.terminal-symbolic";
 
             system = new Adw.PreferencesGroup ();
-            system.title = "System";
-            system.description = "Terminals Accessing Your Main System";
+            system.title = _ ("System");
+            system.description = _ ("Terminals Accessing Your Main System");
 
             containers = new Adw.PreferencesGroup ();
-            containers.title = "Containers";
-            containers.description = "Terminals Accessing Your Containers";
+            containers.title = _ ("Containers");
+            containers.description = _ ("Terminals Accessing Your Containers");
 
             ssh = new Adw.PreferencesGroup ();
-            ssh.title = "Remote";
-            ssh.description = "Terminals Accessing Remote Connections";
+            ssh.title = _ ("Remote");
+            ssh.description = _ ("Terminals Accessing Remote Connections");
 
             page.add (system);
             page.add (containers);
@@ -54,7 +54,7 @@ namespace StillTerminal {
             toolbar_view.set_content (page);
 
             // Create main navigation page with custom headerbar
-            var main_page = new Adw.NavigationPage.with_tag (toolbar_view, "Choose New Tab Profile", "main");
+            var main_page = new Adw.NavigationPage.with_tag (toolbar_view, _ ("Choose New Tab Profile"), "main");
 
             // Set up navigation view
             this.nav_view = new Adw.NavigationView ();
@@ -133,21 +133,21 @@ namespace StillTerminal {
             // Add "no profiles exist" placeholders to empty groups
             if (system_count == 0) {
                 this.system_empty_row = new Adw.ActionRow ();
-                this.system_empty_row.title = "No System Profiles Exist";
+                this.system_empty_row.title = _ ("No System Profiles Exist");
                 this.system_empty_row.sensitive = false;
                 system.add (this.system_empty_row);
             }
 
             if (containers_count == 0) {
                 this.containers_empty_row = new Adw.ActionRow ();
-                this.containers_empty_row.title = "No Container Profiles Exist";
+                this.containers_empty_row.title = _ ("No Container Profiles Exist");
                 this.containers_empty_row.sensitive = false;
                 containers.add (this.containers_empty_row);
             }
 
             if (ssh_count == 0) {
                 this.ssh_empty_row = new Adw.ActionRow ();
-                this.ssh_empty_row.title = "No Remote Profiles Exist";
+                this.ssh_empty_row.title = _ ("No Remote Profiles Exist");
                 this.ssh_empty_row.sensitive = false;
                 ssh.add (this.ssh_empty_row);
             }
@@ -170,16 +170,16 @@ namespace StillTerminal {
             this.ssh_empty_row = null;
 
             system = new Adw.PreferencesGroup ();
-            system.title = "System";
-            system.description = "Terminals Accessing Your Main System";
+            system.title = _ ("System");
+            system.description = _ ("Terminals Accessing Your Main System");
 
             containers = new Adw.PreferencesGroup ();
-            containers.title = "Containers";
-            containers.description = "Terminals Accessing Your Containers";
+            containers.title = _ ("Containers");
+            containers.description = _ ("Terminals Accessing Your Containers");
 
             ssh = new Adw.PreferencesGroup ();
-            ssh.title = "Remote";
-            ssh.description = "Terminals Accessing Remote Connections";
+            ssh.title = _ ("Remote");
+            ssh.description = _ ("Terminals Accessing Remote Connections");
 
             page.add (system);
             page.add (containers);
@@ -251,13 +251,13 @@ namespace StillTerminal {
         private StProfileType selected_type = StProfileType.SYSTEM;
 
         public StProfileTypeSelectorPage() {
-            this.title = "Select Profile Type";
+            this.title = _ ("Select Profile Type");
 
             var header_bar = new Adw.HeaderBar ();
             header_bar.set_show_start_title_buttons (false);
             header_bar.set_show_end_title_buttons (false);
 
-            var next_button = new Gtk.Button.with_label ("Next");
+            var next_button = new Gtk.Button.with_label (_ ("Next"));
             next_button.add_css_class ("suggested-action");
             next_button.clicked.connect (() => {
                 this.type_selected (this.selected_type);
@@ -269,14 +269,14 @@ namespace StillTerminal {
 
             var page = new Adw.PreferencesPage ();
             var group = new Adw.PreferencesGroup ();
-            group.set_title ("Profile Type");
+            group.set_title (_ ("Profile Type"));
             page.add (group);
 
             Gtk.CheckButton? last_button = null;
 
             var system_row = new Adw.ActionRow ();
-            system_row.set_title ("System Profile");
-            system_row.set_subtitle ("Use your local system");
+            system_row.set_title (_ ("System Profile"));
+            system_row.set_subtitle (_ ("Use your local system"));
             var system_icon = new Gtk.Image.from_icon_name ("computer-symbolic");
             system_row.add_prefix (system_icon);
             var system_button = new Gtk.CheckButton ();
@@ -294,8 +294,8 @@ namespace StillTerminal {
             last_button = system_button;
 
             var container_row = new Adw.ActionRow ();
-            container_row.set_title ("Container Profile");
-            container_row.set_subtitle ("Use a container (Distrobox)");
+            container_row.set_title (_ ("Container Profile"));
+            container_row.set_subtitle (_ ("Use a container (Distrobox)"));
             var container_icon = new Gtk.Image.from_icon_name ("container-symbolic");
             container_row.add_prefix (container_icon);
             var container_button = new Gtk.CheckButton ();
@@ -312,8 +312,8 @@ namespace StillTerminal {
             last_button = container_button;
 
             var ssh_row = new Adw.ActionRow ();
-            ssh_row.set_title ("SSH Profile");
-            ssh_row.set_subtitle ("Connect to a remote server");
+            ssh_row.set_title (_ ("SSH Profile"));
+            ssh_row.set_subtitle (_ ("Connect to a remote server"));
             // Use our bundled remote-terminal icon for SSH
             var ssh_icon = new Gtk.Image.from_icon_name ("remote-terminal-symbolic");
             ssh_row.add_prefix (ssh_icon);
@@ -341,13 +341,13 @@ namespace StillTerminal {
         private Gtk.Button create_button;
 
         public StSimpleProfileCreatorPage(StProfileType profile_type = StProfileType.SYSTEM) {
-            this.title = "Create New Profile";
+            this.title = _ ("Create New Profile");
 
             var header_bar = new Adw.HeaderBar ();
             header_bar.set_show_start_title_buttons (false);
             header_bar.set_show_end_title_buttons (false);
 
-            this.create_button = new Gtk.Button.with_label ("Create");
+            this.create_button = new Gtk.Button.with_label (_ ("Create"));
             this.create_button.add_css_class ("suggested-action");
             this.create_button.clicked.connect (this.on_create_clicked);
             header_bar.pack_end (this.create_button);
@@ -365,10 +365,10 @@ namespace StillTerminal {
                     blank_profile.type_subtitle = "";
                     break;
                 case StProfileType.DISTROBOX:
-                    blank_profile.type_subtitle = "Container Environment";
+                    blank_profile.type_subtitle = _ ("Container Environment");
                     break;
                 case StProfileType.SSH:
-                    blank_profile.type_subtitle = "Remote Connection";
+                    blank_profile.type_subtitle = _ ("Remote Connection");
                     break;
             }
 

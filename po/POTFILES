@@ -1,0 +1,17 @@
+src/Main.vala
+src/MainWindow.vala
+src/StPreferences/StPrefsDialog.vala
+src/StPreferences/StPrefsGeneralPage.vala
+src/StPreferences/StPrefsProfileCreator.vala
+src/StPreferences/StPrefsProfileEditor.vala
+src/StPreferences/StPrefsProfilePage.vala
+src/StPreferences/StPrefsShortcutsPage.vala
+src/StPreferences/StThemePickerPage.vala
+src/StTerminal/StNewTabDialog.vala
+src/StTerminal/StProfile.vala
+src/StTerminal/StSecretManager.vala
+src/StTerminal/StTerminal.vala
+src/StWidgets/StHeaderBar.vala
+src/StWidgets/StTerminalPage.vala
+src/data/io.stillhq.terminal.desktop.in
+src/data/io.stillhq.terminal.gschema.xml

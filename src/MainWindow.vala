@@ -13,7 +13,7 @@ namespace StillTerminal {
 
         public MainWindow (Adw.Application app, bool create_initial_tab = true, string? working_directory_override = null) {
             Object (application: app);
-            this.set_title("stillTerminal");
+            this.set_title (_ ("stillTerminal"));
 
             this.settings = new StillTerminal.StSettings ();
             this.default_height = this.settings.window_height;
@@ -248,15 +248,15 @@ namespace StillTerminal {
             var about_action = new SimpleAction ("about", null);
             about_action.activate.connect (() => {
                 var about = new Adw.AboutDialog ();
-                about.set_application_name ("stillTerminal");
+                about.set_application_name (_ ("stillTerminal"));
                 about.set_application_icon ("io.stillhq.terminal");
-                about.set_developer_name ("stillHQ, LLC");
+                about.set_developer_name (_ ("stillHQ, LLC"));
                 about.set_website ("https://stillhq.io");
                 about.set_issue_url ("https://gitlab.com/stillhq/stillTerminal");
                 about.set_version (StillTerminal.APP_VERSION);
-                about.set_copyright ("© 2025 stillHQ, LLC");
+                about.set_copyright (_ ("© 2026 stillHQ, LLC"));
                 string[] credits = { "VTE", "Libadwaita", "GTK" };
-                about.add_acknowledgement_section ("Credits", credits);
+                about.add_acknowledgement_section (_ ("Credits"), credits);
                 about.present (this);
             });
             app.add_action (about_action);
@@ -394,7 +394,7 @@ namespace StillTerminal {
             // Set the window title to the tab title, with "stillTerminal" as fallback
             string title = tab_page.title;
             if (title == null || title.strip () == "") {
-                title = "stillTerminal";
+                title = _ ("stillTerminal");
             }
             this.set_title (title);
             this.header.window_title.set_title (tab_page.title);
@@ -508,12 +508,12 @@ namespace StillTerminal {
 
         private void show_close_confirmation_dialog () {
             var dialog = new Adw.AlertDialog (
-                "Processes are still running",
-                "Closing this window will terminate all running processes. Are you sure you want to continue?"
+                _ ("Processes are still running"),
+                _ ("Closing this window will terminate all running processes. Are you sure you want to continue?")
                 );
 
-            dialog.add_response ("cancel", "_Cancel");
-            dialog.add_response ("close", "_Close Window");
+            dialog.add_response ("cancel", _ ("_Cancel"));
+            dialog.add_response ("close", _ ("_Close Window"));
             dialog.set_response_appearance ("close", Adw.ResponseAppearance.DESTRUCTIVE);
             dialog.set_default_response ("cancel");
             dialog.set_close_response ("cancel");
@@ -533,18 +533,18 @@ namespace StillTerminal {
          */
         private void show_paste_warning_dialog () {
             var dialog = new Adw.AlertDialog (
-                "Paste from Clipboard?",
-                "Only paste commands from sources you trust. Malicious commands can damage your system or compromise your data."
+                _ ("Paste from Clipboard?"),
+                _ ("Only paste commands from sources you trust. Malicious commands can damage your system or compromise your data.")
                 );
 
-            dialog.add_response ("cancel", "_Cancel");
-            dialog.add_response ("paste", "_Paste");
+            dialog.add_response ("cancel", _ ("_Cancel"));
+            dialog.add_response ("paste", _ ("_Paste"));
             dialog.set_response_appearance ("paste", Adw.ResponseAppearance.SUGGESTED);
             dialog.set_default_response ("paste");
             dialog.set_close_response ("cancel");
 
             // Add checkbox to disable future warnings
-            var check_button = new Gtk.CheckButton.with_label ("Don't show this warning again");
+            var check_button = new Gtk.CheckButton.with_label (_ ("Don't show this warning again"));
             dialog.set_extra_child (check_button);
 
             dialog.response.connect ((response) => {
@@ -565,12 +565,12 @@ namespace StillTerminal {
          */
         private void show_close_tab_confirmation_dialog (Adw.TabPage tab_page) {
             var dialog = new Adw.AlertDialog (
-                "Process is still running",
-                "Closing this tab will terminate the running process. Are you sure you want to continue?"
+                _ ("Process is still running"),
+                _ ("Closing this tab will terminate the running process. Are you sure you want to continue?")
                 );
 
-            dialog.add_response ("cancel", "_Cancel");
-            dialog.add_response ("close", "_Close Tab");
+            dialog.add_response ("cancel", _ ("_Cancel"));
+            dialog.add_response ("close", _ ("_Close Tab"));
             dialog.set_response_appearance ("close", Adw.ResponseAppearance.DESTRUCTIVE);
             dialog.set_default_response ("cancel");
             dialog.set_close_response ("cancel");

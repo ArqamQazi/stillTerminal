@@ -5,10 +5,10 @@ namespace StillTerminal {
         private StPrefsShortcutGroup editing_group;
 
         public StPrefsShortcutsPage () {
-            this.window_group = new StPrefsShortcutGroup ("Window", "Window and tab management");
-            this.editing_group = new StPrefsShortcutGroup ("Editing", "Text editing and selection");
+            this.window_group = new StPrefsShortcutGroup (_ ("Window"), _ ("Window and tab management"));
+            this.editing_group = new StPrefsShortcutGroup (_ ("Editing"), _ ("Text editing and selection"));
 
-            this.set_title ("Shortcuts");
+            this.set_title (_ ("Shortcuts"));
             this.set_icon_name ("preferences-desktop-keyboard-symbolic");
 
             this.setup_shortcuts ();
@@ -19,21 +19,21 @@ namespace StillTerminal {
 
         private void setup_shortcuts () {
             // Window management
-            this.window_group.add_shortcut_row ("new-tab", "New Tab", "Create a new terminal tab");
-            this.window_group.add_shortcut_row ("reopen-last-tab", "Reopen Last Tab", "Open a new tab using the most recently used profile");
-            this.window_group.add_shortcut_row ("close-tab", "Close Tab", "Close the current tab");
-            this.window_group.add_shortcut_row ("next-tab", "Next Tab", "Switch to next tab");
-            this.window_group.add_shortcut_row ("previous-tab", "Previous Tab", "Switch to previous tab");
-            this.window_group.add_shortcut_row ("new-window", "New Window", "Open a new terminal window");
-            this.window_group.add_shortcut_row ("fullscreen", "Toggle Fullscreen", "Toggle fullscreen mode");
-            this.window_group.add_shortcut_row ("preferences", "Preferences", "Open preferences dialog");
-            this.window_group.add_shortcut_row ("zoom-in", "Zoom In", "Increase font size");
-            this.window_group.add_shortcut_row ("zoom-out", "Zoom Out", "Decrease font size");
+            this.window_group.add_shortcut_row ("new-tab", _ ("New Tab"), _ ("Create a new terminal tab"));
+            this.window_group.add_shortcut_row ("reopen-last-tab", _ ("Reopen Last Tab"), _ ("Open a new tab using the most recently used profile"));
+            this.window_group.add_shortcut_row ("close-tab", _ ("Close Tab"), _ ("Close the current tab"));
+            this.window_group.add_shortcut_row ("next-tab", _ ("Next Tab"), _ ("Switch to next tab"));
+            this.window_group.add_shortcut_row ("previous-tab", _ ("Previous Tab"), _ ("Switch to previous tab"));
+            this.window_group.add_shortcut_row ("new-window", _ ("New Window"), _ ("Open a new terminal window"));
+            this.window_group.add_shortcut_row ("fullscreen", _ ("Toggle Fullscreen"), _ ("Toggle fullscreen mode"));
+            this.window_group.add_shortcut_row ("preferences", _ ("Preferences"), _ ("Open preferences dialog"));
+            this.window_group.add_shortcut_row ("zoom-in", _ ("Zoom In"), _ ("Increase font size"));
+            this.window_group.add_shortcut_row ("zoom-out", _ ("Zoom Out"), _ ("Decrease font size"));
 
             // Editing actions
-            this.editing_group.add_shortcut_row ("copy", "Copy", "Copy selected text");
-            this.editing_group.add_shortcut_row ("paste", "Paste", "Paste from clipboard");
-            this.editing_group.add_shortcut_row ("select-all", "Select All", "Select all terminal content");
+            this.editing_group.add_shortcut_row ("copy", _ ("Copy"), _ ("Copy selected text"));
+            this.editing_group.add_shortcut_row ("paste", _ ("Paste"), _ ("Paste from clipboard"));
+            this.editing_group.add_shortcut_row ("select-all", _ ("Select All"), _ ("Select all terminal content"));
         }
     }
 
@@ -80,7 +80,7 @@ namespace StillTerminal {
             this.edit_button.set_valign (Gtk.Align.CENTER);
             this.edit_button.add_css_class ("flat");
             this.edit_button.add_css_class ("circular");
-            this.edit_button.set_tooltip_text ("Edit shortcut");
+            this.edit_button.set_tooltip_text (_ ("Edit shortcut"));
             this.edit_button.set_icon_name ("document-edit-symbolic");
 
             // Create default button with reset icon
@@ -88,7 +88,7 @@ namespace StillTerminal {
             this.default_button.set_valign (Gtk.Align.CENTER);
             this.default_button.add_css_class ("flat");
             this.default_button.add_css_class ("circular");
-            this.default_button.set_tooltip_text ("Reset to default");
+            this.default_button.set_tooltip_text (_ ("Reset to default"));
             this.default_button.set_icon_name ("arrow-hook-left-horizontal2-symbolic");
 
             box.append (this.shortcut_label);
@@ -124,7 +124,7 @@ namespace StillTerminal {
 
             // Change to question icon and set tooltip
             this.edit_button.set_icon_name ("question-round-outline-symbolic");
-            this.edit_button.set_tooltip_text ("Press keys...");
+            this.edit_button.set_tooltip_text (_ ("Press keys..."));
             this.edit_button.set_sensitive (false);
 
             // Create a key event controller for capturing key presses
@@ -188,7 +188,7 @@ namespace StillTerminal {
 
             // Restore pencil icon and tooltip
             this.edit_button.set_icon_name ("document-edit-symbolic");
-            this.edit_button.set_tooltip_text ("Edit shortcut");
+            this.edit_button.set_tooltip_text (_ ("Edit shortcut"));
             this.edit_button.set_sensitive (true);
         }
 
@@ -198,7 +198,7 @@ namespace StillTerminal {
 
             // Restore pencil icon and tooltip
             this.edit_button.set_icon_name ("document-edit-symbolic");
-            this.edit_button.set_tooltip_text ("Edit shortcut");
+            this.edit_button.set_tooltip_text (_ ("Edit shortcut"));
             this.edit_button.set_sensitive (true);
         }
 
