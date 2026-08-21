@@ -68,7 +68,6 @@ done
 
 # ── Clean up intermediate artifacts ─────────────────────────────────
 rm -rf "$APPDIR"
-rm -f "$OUTPATH"/appinfo
 
 echo ""
 echo "=== AnyLinux AppImage created ==="
