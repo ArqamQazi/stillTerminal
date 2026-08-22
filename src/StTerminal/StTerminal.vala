@@ -39,6 +39,12 @@ namespace StillTerminal {
 
             // Track when child processes exit
             this.child_exited.connect (on_child_exited);
+
+            // Drag and drop support
+            var drop_target = new Gtk.DropTarget (GLib.Type.INVALID, Gdk.DragAction.COPY);
+            drop_target.set_gtypes ({ typeof (Gdk.FileList), typeof (GLib.File), typeof (string) });
+            drop_target.drop.connect (this.on_drop);
+            this.add_controller (drop_target);
         }
 
         public void set_tab_page (Adw.TabPage tab_page) {
@@ -463,6 +469,38 @@ namespace StillTerminal {
             prompt += _ ("Press any key to close this tab...");
             prompt += "\r\n";
             this.feed (prompt.data);
+        }
+
+        private bool on_drop (GLib.Value value, double x, double y) {
+            var vtype = value.type ();
+
+            if (vtype == typeof (Gdk.FileList)) {
+                var file_list = (Gdk.FileList) value.get_boxed ();
+                var files = file_list.get_files ();
+                string[] paths = {};
+                foreach (var file in files) {
+                    paths += GLib.Shell.quote (file.get_path ());
+                }
+                string paste_str = string.joinv (" ", paths) + " ";
+                this.paste_text (paste_str);
+                return true;
+            } else if (vtype == typeof (GLib.File)) {
+                var file = (GLib.File) value.get_object ();
+                var path = file.get_path ();
+                if (path != null) {
+                    this.paste_text (GLib.Shell.quote (path) + " ");
+                }
+                return true;
+            } else if (vtype == typeof (string)) {
+                string text = value.get_string ();
+                if (text != null) {
+                    this.paste_text (text);
+                }
+                return true;
+            }
+
+            warning ("Unhandled drop type in stillterminal.");
+            return false;
         }
     }
 }
