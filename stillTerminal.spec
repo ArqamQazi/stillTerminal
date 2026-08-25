@@ -1,6 +1,6 @@
 Name:           still-terminal
 Version:        10.2.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A tabbed terminal emulator for stillOS
 
 License:        GPL-3.0-or-later
@@ -29,6 +29,7 @@ Requires:       libsecret
 Requires:       libgee
 Requires:       json-glib
 Requires:       sshpass
+Recommends:     still-terminal-gnome-terminal%{?_isa} = %{version}-%{release}
 
 %description
 stillTerminal is a modern tabbed terminal emulator built for stillOS.
@@ -61,6 +62,18 @@ install -Dm644 nautilus/still-terminal-nautilus.py %{buildroot}%{_datadir}/nauti
 
 %postun
 /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &> /dev/null || :
+
+%package gnome-terminal
+Summary:        GNOME Terminal command-line compatibility for stillTerminal
+Requires:       still-terminal%{?_isa} = %{version}-%{release}
+Conflicts:      gnome-terminal
+
+%description gnome-terminal
+Compatibility launcher for applications that invoke gnome-terminal. It
+translates supported GNOME Terminal command-line options to stillTerminal.
+
+%files gnome-terminal
+%{_bindir}/gnome-terminal
 
 %package nautilus
 Summary:        Nautilus extension for stillTerminal

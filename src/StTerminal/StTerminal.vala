@@ -15,11 +15,17 @@ namespace StillTerminal {
         private GLib.Pid shell_pid = -1;
         private Gtk.EventControllerKey? close_prompt_controller = null;
         private bool waiting_for_close_key = false;
+        private string[]? command_override = null;
 
-        public StTerminal (StSettings settings, StProfile profile) {
+        public StTerminal (
+            StSettings settings,
+            StProfile profile,
+            string[]? command_override = null
+        ) {
             Object ();
             this.settings = settings;
             this.profile = profile;
+            this.command_override = command_override;
             int scrollback = profile.get_scrollback_lines_setting ();
             if (scrollback < -1) {
                 scrollback = StProfile.DEFAULT_SCROLLBACK_LINES;
@@ -92,6 +98,10 @@ namespace StillTerminal {
         }
 
         public string[] get_spawn_list (StProfile profile) {
+            if (this.command_override != null && this.command_override.length > 0) {
+                return this.command_override;
+            }
+
             // no-op: type-specific metadata now in profile.type_params
             switch (profile.type) {
             default:
@@ -145,6 +155,10 @@ namespace StillTerminal {
         }
 
         private string[]? get_env_for_spawn (StProfile profile) {
+            if (!LaunchRequest.use_profile_environment (this.command_override)) {
+                return null;
+            }
+
             // Only inject SSHPASS env when needed. Otherwise inherit current env (null).
             if (profile.type == StProfileType.SSH) {
                 string? pw = StSecretManager.lookup_password (profile.id);
