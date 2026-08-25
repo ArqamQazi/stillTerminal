@@ -3,7 +3,7 @@
 A tabbed terminal emulator build for stillOS. Integrates beautilfully with SSH and DistroBox.
 stillTerminal icon by [Delphic Melody](https://linksta.cc/@delphic-melody)
 
-![image](https://gitlab.com/stillhq/stillTerminal/-/raw/main/assets/Screenshot_From_2025-12-26_19-39-57.png)
+![image](assets/screenshot.png)
 
 
 ## Build instructions:
