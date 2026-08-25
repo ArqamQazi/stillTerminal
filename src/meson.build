@@ -12,6 +12,7 @@ sources = files(
   'Constants.vala',
   'Main.vala',
   'MainWindow.vala',
+  'NewTabButtonPolicy.vala',
   'ShortcutController.vala',
 )
 
