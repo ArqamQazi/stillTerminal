@@ -14,4 +14,6 @@ add_project_arguments('-DGETTEXT_PACKAGE="@0@"'.format(gettext_package), languag
 
 subdir('src')
 subdir('st-distrobox')
+subdir('compat')
 subdir('po')
+subdir('tests')

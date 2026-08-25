@@ -10,6 +10,7 @@ config_vala = configure_file(
 
 sources = files(
   'Constants.vala',
+  'LaunchRequest.vala',
   'Main.vala',
   'MainWindow.vala',
   'ShortcutController.vala',

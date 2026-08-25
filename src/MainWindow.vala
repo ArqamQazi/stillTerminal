@@ -11,7 +11,15 @@ namespace StillTerminal {
         private ulong tracked_appearance_handler = 0;
 
 
-        public MainWindow (Adw.Application app, bool create_initial_tab = true, string? working_directory_override = null) {
+        public MainWindow (
+            Adw.Application app,
+            bool create_initial_tab = true,
+            string? working_directory_override = null,
+            string[]? command_override = null,
+            string? title_override = null,
+            double zoom = 1.0,
+            bool start_fullscreen = false
+        ) {
             Object (application: app);
             this.set_title (_ ("stillTerminal"));
 
@@ -62,7 +70,11 @@ namespace StillTerminal {
                 if (working_directory_override != null && working_directory_override.strip () != "") {
                     profile.working_directory = working_directory_override;
                 }
-                this.add_tab (profile);
+                this.add_tab (profile, command_override, title_override, zoom);
+            }
+
+            if (start_fullscreen) {
+                this.fullscreen ();
             }
 
             // Wrap content in a TabOverview so the overview can take over the
@@ -322,12 +334,20 @@ namespace StillTerminal {
             this.close_request.connect (on_close_request);
         }
 
-        public Adw.TabPage add_tab (StProfile profile) {
+        public Adw.TabPage add_tab (
+            StProfile profile,
+            string[]? command_override = null,
+            string? title_override = null,
+            double zoom = 1.0
+        ) {
             bool was_empty = (this.tab_view.get_n_pages () == 0);
-            var page = new StTerminalPage (this.settings, profile);
+            var page = new StTerminalPage (this.settings, profile, command_override);
             Adw.TabPage tab_page = this.tab_view.append (page);
 
-            tab_page.title = profile.name;
+            tab_page.title = title_override != null && title_override.strip () != ""
+                ? title_override
+                : profile.name;
+            page.terminal.font_scale = zoom;
             this.tab_view.set_selected_page (tab_page);
             if (was_empty && this.tab_overview != null) {
                 this.tab_overview.set_open (false);
