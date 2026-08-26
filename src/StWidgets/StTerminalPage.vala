@@ -12,8 +12,12 @@ namespace StillTerminal {
         private SimpleAction toggle_read_only_action;
         private SimpleAction open_in_file_manager_action;
 
-        public StTerminalPage (StSettings settings, StProfile profile) {
-            this.terminal = new StTerminal (settings, profile);
+        public StTerminalPage (
+            StSettings settings,
+            StProfile profile,
+            string[]? command_override = null
+        ) {
+            this.terminal = new StTerminal (settings, profile, command_override);
             scrolled_window = new Gtk.ScrolledWindow ();
             scrolled_window.add_css_class ("terminal-scrolled-window");
             scrolled_window.set_overlay_scrolling (true);

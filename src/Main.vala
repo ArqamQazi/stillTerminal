@@ -15,6 +15,26 @@ public class StillTerminal.App : Adw.Application {
             GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
             _ ("Set the initial working directory"), _ ("DIR")
             );
+        this.add_main_option (
+            "command", '\0',
+            GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
+            _ ("Execute a command string"), _ ("COMMAND")
+            );
+        this.add_main_option (
+            "title", 't',
+            GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
+            _ ("Set the initial terminal title"), _ ("TITLE")
+            );
+        this.add_main_option (
+            "zoom", '\0',
+            GLib.OptionFlags.NONE, GLib.OptionArg.DOUBLE,
+            _ ("Set the terminal zoom factor"), _ ("FACTOR")
+            );
+        this.add_main_option (
+            "fullscreen", '\0',
+            GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+            _ ("Open the window fullscreen"), null
+            );
     }
 
     protected override void startup () {
@@ -38,20 +58,57 @@ public class StillTerminal.App : Adw.Application {
 
     protected override int command_line (GLib.ApplicationCommandLine cmdline) {
         var options = cmdline.get_options_dict ();
-        string? working_dir = null;
+        string? requested_working_dir = null;
+        string? legacy_command = null;
+        string? title = null;
+        double zoom = 1.0;
+        bool start_fullscreen = options.contains ("fullscreen");
 
         if (options.contains ("working-directory")) {
-            working_dir = options.lookup_value (
+            requested_working_dir = options.lookup_value (
                 "working-directory", GLib.VariantType.STRING
                 ).get_string ();
         }
 
-        if (working_dir != null && working_dir.strip () != "") {
-            var win = new MainWindow (this, true, working_dir);
-            win.present ();
-        } else {
-            this.activate ();
+        if (options.contains ("command")) {
+            legacy_command = options.lookup_value (
+                "command", GLib.VariantType.STRING
+                ).get_string ();
         }
+
+        if (options.contains ("title")) {
+            title = options.lookup_value (
+                "title", GLib.VariantType.STRING
+                ).get_string ();
+        }
+
+        if (options.contains ("zoom")) {
+            zoom = options.lookup_value (
+                "zoom", GLib.VariantType.DOUBLE
+                ).get_double ();
+            if (zoom <= 0.0) {
+                cmdline.printerr (_ ("Zoom factor must be greater than zero.\n"));
+                return 2;
+            }
+        }
+
+        string[]? command;
+        try {
+            command = LaunchRequest.parse_command (
+                legacy_command, cmdline.get_arguments ()
+            );
+        } catch (Error e) {
+            cmdline.printerr (_ ("Failed to parse command line: %s\n").printf (e.message));
+            return 2;
+        }
+
+        string? working_dir = LaunchRequest.resolve_working_directory (
+            requested_working_dir, cmdline.get_cwd ()
+        );
+        var win = new MainWindow (
+            this, true, working_dir, command, title, zoom, start_fullscreen
+        );
+        win.present ();
 
         return 0;
     }
