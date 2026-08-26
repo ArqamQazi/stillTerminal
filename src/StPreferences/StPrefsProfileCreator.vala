@@ -251,6 +251,7 @@ namespace StillTerminal {
             Gtk.CheckButton? last_button = null;
             add_check_button (out last_button, _ ("System Profile"), _ ("Regular system terminal environment."), "utilities-terminal-symbolic", StProfileType.SYSTEM, null);
             last_button.set_active (true);
+            add_check_button (out last_button, _ ("Multiplexer Profile"), _ ("Attach to or create a screen, tmux, or zellij session."), "utilities-terminal-symbolic", StProfileType.MULTIPLEXER, last_button);
             add_check_button (out last_button, _ ("Container Profile"), _ ("Create a container with another Linux distribution environment (via Distrobox)."), "container-symbolic", StProfileType.DISTROBOX, last_button);
             add_check_button (out last_button, _ ("SSH Profile"), _ ("Connect to a remote server (via SSH)."), "remote-terminal-symbolic", StProfileType.SSH, last_button);
 

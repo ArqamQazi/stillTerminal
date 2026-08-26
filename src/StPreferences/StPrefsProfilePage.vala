@@ -2,13 +2,16 @@ namespace StillTerminal {
     public class StPrefsProfilePage : Adw.PreferencesPage {
         public StPrefsDialog dialog;
         private Adw.PreferencesGroup system_group;
+        private Adw.PreferencesGroup multiplexer_group;
         private Adw.PreferencesGroup containers_group;
         private Adw.PreferencesGroup ssh_group;
         private Adw.PreferencesGroup creation_group;
         Adw.ActionRow[] system_rows = {};
+        Adw.ActionRow[] multiplexer_rows = {};
         Adw.ActionRow[] container_rows = {};
         Adw.ActionRow[] ssh_rows = {};
         private Adw.ActionRow? system_empty_row = null;
+        private Adw.ActionRow? multiplexer_empty_row = null;
         private Adw.ActionRow? containers_empty_row = null;
         private Adw.ActionRow? ssh_empty_row = null;
 
@@ -27,6 +30,13 @@ namespace StillTerminal {
             this.system_group.set_title (_ ("System Profiles"));
             this.system_group.set_description (_ ("Terminals accessing your local system"));
             this.add (system_group);
+
+            this.multiplexer_group = new Adw.PreferencesGroup ();
+            this.multiplexer_group.set_title (_ ("Multiplexer Profiles"));
+            this.multiplexer_group.set_description (
+                _ ("Persistent screen, tmux, and zellij sessions")
+            );
+            this.add (multiplexer_group);
 
             // Container profiles group
             this.containers_group = new Adw.PreferencesGroup ();
@@ -49,6 +59,9 @@ namespace StillTerminal {
             switch (type) {
                 case StProfileType.SYSTEM:
                     blank_profile.type_subtitle = "";
+                    break;
+                case StProfileType.MULTIPLEXER:
+                    blank_profile.type_subtitle = _ ("Terminal Multiplexer");
                     break;
                 case StProfileType.DISTROBOX:
                     blank_profile.type_subtitle = _ ("Container Environment");
@@ -320,6 +333,9 @@ namespace StillTerminal {
             foreach (var row in this.system_rows) {
                 this.system_group.remove (row);
             }
+            foreach (var row in this.multiplexer_rows) {
+                this.multiplexer_group.remove (row);
+            }
             foreach (var row in this.container_rows) {
                 this.containers_group.remove (row);
             }
@@ -332,6 +348,10 @@ namespace StillTerminal {
                 this.system_group.remove (this.system_empty_row);
                 this.system_empty_row = null;
             }
+            if (this.multiplexer_empty_row != null) {
+                this.multiplexer_group.remove (this.multiplexer_empty_row);
+                this.multiplexer_empty_row = null;
+            }
             if (this.containers_empty_row != null) {
                 this.containers_group.remove (this.containers_empty_row);
                 this.containers_empty_row = null;
@@ -342,6 +362,7 @@ namespace StillTerminal {
             }
 
             this.system_rows = {};
+            this.multiplexer_rows = {};
             this.container_rows = {};
             this.ssh_rows = {};
 
@@ -374,6 +395,10 @@ namespace StillTerminal {
                         this.system_group.add (row);
                         this.system_rows += row;
                         break;
+                    case StProfileType.MULTIPLEXER:
+                        this.multiplexer_group.add (row);
+                        this.multiplexer_rows += row;
+                        break;
                     case StProfileType.DISTROBOX:
                         this.containers_group.add (row);
                         this.container_rows += row;
@@ -391,6 +416,13 @@ namespace StillTerminal {
                 this.system_empty_row.title = _ ("No System Profiles Exist");
                 this.system_empty_row.sensitive = false;
                 this.system_group.add (this.system_empty_row);
+            }
+
+            if (this.multiplexer_rows.length == 0) {
+                this.multiplexer_empty_row = new Adw.ActionRow ();
+                this.multiplexer_empty_row.title = _ ("No Multiplexer Profiles Exist");
+                this.multiplexer_empty_row.sensitive = false;
+                this.multiplexer_group.add (this.multiplexer_empty_row);
             }
 
             if (this.container_rows.length == 0) {
@@ -412,6 +444,7 @@ namespace StillTerminal {
 
             // Always show groups
             this.system_group.visible = true;
+            this.multiplexer_group.visible = true;
             this.containers_group.visible = true;
             this.ssh_group.visible = true;
         }

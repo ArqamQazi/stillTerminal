@@ -1,6 +1,6 @@
 namespace StillTerminal {
     public enum StProfileType {
-        SYSTEM, DISTROBOX, SSH;
+        SYSTEM, DISTROBOX, SSH, MULTIPLEXER;
 
         public string to_string () {
             switch (this) {
@@ -10,6 +10,8 @@ namespace StillTerminal {
                     return "distrobox";
                 case SSH:
                     return "ssh";
+                case MULTIPLEXER:
+                    return "multiplexer";
             }
             return "";
         }
@@ -22,6 +24,8 @@ namespace StillTerminal {
                     return DISTROBOX;
                 case "ssh":
                     return SSH;
+                case "multiplexer":
+                    return MULTIPLEXER;
             }
             return null;
         }
@@ -354,6 +358,20 @@ namespace StillTerminal {
             }
 
             return args.to_array ();
+        }
+
+        public string[]? get_multiplexer_arguments () {
+            if (this.type != StProfileType.MULTIPLEXER
+                || this.type_params == null
+                || !this.type_params.has_key ("multiplexer")) {
+                return null;
+            }
+
+            string program = this.type_params["multiplexer"];
+            string session = this.type_params.has_key ("session")
+                ? this.type_params["session"]
+                : "";
+            return MultiplexerCommand.build (program, session);
         }
     }
 
