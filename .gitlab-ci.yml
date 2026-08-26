@@ -1,0 +1,70 @@
+stages:
+  - build
+  - release
+
+build:appimage:
+  stage: build
+  image: ghcr.io/pkgforge-dev/archlinux:latest
+  script:
+    # Replicate pkgforge-dev/anylinux-setup-action@v2
+    - export QUICK_SHARUN="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/quick-sharun.sh"
+    - export DEBLOATED_PACKAGES="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/get-debloated-pkgs.sh"
+    - export MAKE_AUR_PACKAGE="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/make-aur-package.sh"
+    - export ANYLINUX_TOOLS_DIR="/usr/local/bin"
+    - pacman-key --init
+    - pacman -Syy --noconfirm archlinux-keyring
+    - pacman -Syu --noconfirm 7zip base-devel freetype2 git jq libx11 libxrandr libxss nspr nss nss-mdns nss-myhostname patchelf pulseaudio pulseaudio-alsa unzip wget xorg-server-xvfb zsync
+    - mkdir -p "$ANYLINUX_TOOLS_DIR"
+    - wget --retry-connrefused --tries=30 -O "$ANYLINUX_TOOLS_DIR/quick-sharun" "$QUICK_SHARUN"
+    - wget --retry-connrefused --tries=30 -O "$ANYLINUX_TOOLS_DIR/get-debloated-pkgs" "$DEBLOATED_PACKAGES"
+    - wget --retry-connrefused --tries=30 -O "$ANYLINUX_TOOLS_DIR/make-aur-package" "$MAKE_AUR_PACKAGE"
+    - chmod +x "$ANYLINUX_TOOLS_DIR/quick-sharun" "$ANYLINUX_TOOLS_DIR/get-debloated-pkgs" "$ANYLINUX_TOOLS_DIR/make-aur-package"
+    
+    # Install dependencies
+    - /bin/sh ./get-dependencies.sh
+    
+    # Build AppImage
+    - /bin/sh ./make-appimage.sh
+    
+    # Pass version variables to the release stage
+    - VERSION=$(meson introspect build-anyimage --projectinfo 2>/dev/null | awk -F'"' '/"version"/{print $4}')
+    - DATE=$(date +'%Y-%m-%d_%s')
+    - echo "APP_VERSION=$VERSION" >> build.env
+    - echo "TAG_NAME=${VERSION}@${DATE}" >> build.env
+    - echo "APP_NAME=stillTerminal" >> build.env
+  artifacts:
+    paths:
+      - dist/
+    reports:
+      dotenv: build.env
+    expire_in: 1 week
+
+release:appimage:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  needs:
+    - job: build:appimage
+      artifacts: true
+  script:
+    - apk add --no-cache git
+    
+    # Update LATEST_VERSION
+    - echo "$APP_VERSION" > ./LATEST_VERSION
+    - git config user.name "gitlab-ci[bot]"
+    - git config user.email "gitlab-ci[bot]@gitlab.com"
+    - git add ./LATEST_VERSION
+    - git commit --allow-empty -m 'bump `LATEST_VERSION` [skip ci]'
+    
+    # Push back to the repository
+    - if [ -n "$CI_JOB_TOKEN" ]; then git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"; fi
+    - git push origin HEAD:main || echo "Note - Push requires a project access token with write repository scope"
+  release:
+    name: '$APP_NAME $APP_VERSION'
+    tag_name: '$TAG_NAME'
+    description: 'Automated AppImage Release'
+    assets:
+      links:
+        - name: 'AppImage'
+          url: '${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/download'
