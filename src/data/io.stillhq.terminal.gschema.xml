@@ -157,6 +157,11 @@
       <summary>Open tab overview</summary>
       <description>Keyboard shortcut to open tab overview</description>
     </key>
+    <key name="new-tab-button-opens-default" type="b">
+      <default>false</default>
+      <summary>Open Default Profile with Plus Button</summary>
+      <description>Whether clicking the plus button opens the default profile and Shift-clicking opens the profile chooser.</description>
+    </key>
     <key name="last-profile-id" type="s">
       <default>'default'</default>
       <summary>Last opened profile id</summary>

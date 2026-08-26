@@ -2,12 +2,14 @@ namespace StillTerminal {
     public class StPrefsGeneralPage : Adw.PreferencesPage {
         public StPrefsDialog dialog;
         public StPrefsWindowGroup window_group;
+        public StPrefsTabsGroup tab_group;
         public StPrefsCellSpacingGroup cell_spacing_group;
         public StPrefsAppearanceGroup appearance_group;
 
         public StPrefsGeneralPage (StPrefsDialog dialog) {
             this.dialog = dialog;
             this.window_group = new StPrefsWindowGroup ();
+            this.tab_group = new StPrefsTabsGroup ();
             this.cell_spacing_group = new StPrefsCellSpacingGroup ();
             this.appearance_group = new StPrefsAppearanceGroup ();
 
@@ -15,6 +17,7 @@ namespace StillTerminal {
             this.set_icon_name ("utilities-terminal-symbolic");
 
             this.add (this.window_group);
+            this.add (this.tab_group);
             this.add (this.cell_spacing_group);
             this.add (this.appearance_group);
         }
@@ -74,6 +77,23 @@ namespace StillTerminal {
                 }
                 monitor_index++;
             }
+        }
+    }
+
+    public class StPrefsTabsGroup : Adw.PreferencesGroup {
+        public Adw.SwitchRow new_tab_button_opens_default;
+
+        public StPrefsTabsGroup () {
+            this.set_title (_ ("Tabs"));
+
+            this.new_tab_button_opens_default = new Adw.SwitchRow ();
+            this.new_tab_button_opens_default.set_title (
+                _ ("Open Default Profile with Plus Button")
+            );
+            this.new_tab_button_opens_default.set_subtitle (
+                _ ("Click opens the default profile; Shift-click chooses another profile")
+            );
+            this.add (this.new_tab_button_opens_default);
         }
     }
 

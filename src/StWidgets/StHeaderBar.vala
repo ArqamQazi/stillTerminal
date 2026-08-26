@@ -117,13 +117,27 @@ namespace StillTerminal {
             new_tab_click.set_propagation_phase (Gtk.PropagationPhase.CAPTURE);
             new_tab_click.released.connect ((n_press, x, y) => {
                 var state = new_tab_click.get_current_event_state ();
-                bool open_recent = ((state & Gdk.ModifierType.SHIFT_MASK) != 0) || ((state & Gdk.ModifierType.CONTROL_MASK) != 0);
-                if (open_recent) {
-                    var profile = this.main_window.get_last_or_default_profile ();
-                    this.main_window.add_tab (profile);
-                } else {
-                    var dialog = new StNewTabDialog (this.main_window);
-                    dialog.present (this.main_window);
+                bool alternate_pressed = (
+                    (state & Gdk.ModifierType.SHIFT_MASK) != 0
+                    || (state & Gdk.ModifierType.CONTROL_MASK) != 0
+                );
+                var action = NewTabButtonPolicy.action_for_click (
+                    this.main_window.settings.new_tab_button_opens_default,
+                    alternate_pressed
+                );
+
+                switch (action) {
+                    case NewTabButtonAction.OPEN_DEFAULT_PROFILE:
+                        this.main_window.add_tab (get_default_profile ());
+                        break;
+                    case NewTabButtonAction.OPEN_RECENT_PROFILE:
+                        this.main_window.add_tab (
+                            this.main_window.get_last_or_default_profile ()
+                        );
+                        break;
+                    case NewTabButtonAction.CHOOSE_PROFILE:
+                        this.main_window.present_new_tab_dialog ();
+                        break;
                 }
             });
             this.new_tab_button.add_controller (new_tab_click);

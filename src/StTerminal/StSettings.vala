@@ -25,6 +25,7 @@ namespace StillTerminal {
         public bool notification_on_task { get; set; }
         public string last_profile_id { get; set; }
         public bool warn_on_paste { get; set; }
+        public bool new_tab_button_opens_default { get; set; }
         public GLib.Settings settings;
 
         public StSettings () {
@@ -47,6 +48,12 @@ namespace StillTerminal {
             settings.bind ("notification-on-task", this, "notification_on_task", SettingsBindFlags.DEFAULT);
             settings.bind ("last-profile-id", this, "last_profile_id", SettingsBindFlags.DEFAULT);
             settings.bind ("warn-on-paste", this, "warn_on_paste", SettingsBindFlags.DEFAULT);
+            settings.bind (
+                "new-tab-button-opens-default",
+                this,
+                "new_tab_button_opens_default",
+                SettingsBindFlags.DEFAULT
+            );
         }
 
         public void bind_to_vte (StTerminal vte) {
@@ -88,6 +95,12 @@ namespace StillTerminal {
             settings.bind ("keep-window-size", general.window_group.window_width, "sensitive", SettingsBindFlags.INVERT_BOOLEAN);
             settings.bind ("keep-window-size", general.window_group.window_height, "sensitive", SettingsBindFlags.INVERT_BOOLEAN);
             settings.bind ("start-maximized", general.window_group.start_maximized, "active", SettingsBindFlags.DEFAULT);
+            settings.bind (
+                "new-tab-button-opens-default",
+                general.tab_group.new_tab_button_opens_default,
+                "active",
+                SettingsBindFlags.DEFAULT
+            );
             settings.bind ("cell-height", general.cell_spacing_group.cell_height, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("cell-width", general.cell_spacing_group.cell_width, "value", SettingsBindFlags.DEFAULT);
             settings.bind ("padding", general.appearance_group.padding, "value", SettingsBindFlags.DEFAULT);

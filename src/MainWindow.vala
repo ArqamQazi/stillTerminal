@@ -463,7 +463,7 @@ namespace StillTerminal {
             );
         }
 
-        private void present_new_tab_dialog () {
+        public void present_new_tab_dialog () {
             if (this.new_tab_dialog_showing) {
                 return;
             }
