@@ -59,7 +59,7 @@ release:appimage:
     
     # Push back to the repository
     - if [ -n "$CI_JOB_TOKEN" ]; then git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"; fi
-    - git push origin HEAD:main || echo "Note: Push requires a project access token with write repository scope"
+    - git push origin HEAD:main || echo "Note - Push requires a project access token with write repository scope"
   release:
     name: '$APP_NAME $APP_VERSION'
     tag_name: '$TAG_NAME'
