@@ -18,6 +18,9 @@ namespace StillTerminal {
         Gtk.Stack icon_preview_stack;
         Adw.PreferencesGroup ssh_auth_group;
         Adw.PreferencesGroup ssh_options_group;
+        Adw.PreferencesGroup multiplexer_group;
+        Adw.ComboRow multiplexer_combo;
+        Adw.EntryRow multiplexer_session_row;
         Adw.PreferencesGroup container_group;
         Adw.ActionRow db_warning_row;
 
@@ -143,6 +146,9 @@ namespace StillTerminal {
 
             // SSH-specific fields (only shown for SSH profiles)
             this.setup_ssh_fields ();
+
+            // Multiplexer-specific fields
+            this.setup_multiplexer_fields ();
 
             // Container-specific fields (only shown for Distrobox profiles)
             this.setup_container_fields ();
@@ -277,6 +283,31 @@ namespace StillTerminal {
             // Initially hide SSH fields (they'll be shown only for SSH profiles)
             this.update_ssh_fields_visibility ();
             this.update_ssh_command_preview ();
+        }
+
+        private void setup_multiplexer_fields () {
+            this.multiplexer_group = new Adw.PreferencesGroup ();
+            this.multiplexer_group.set_title (_ ("Multiplexer Options"));
+            this.multiplexer_group.set_visible (false);
+            var page = this.get_first_child () as Adw.PreferencesPage;
+            if (page != null) {
+                page.add (this.multiplexer_group);
+            }
+
+            this.multiplexer_combo = new Adw.ComboRow ();
+            this.multiplexer_combo.set_title (_ ("Multiplexer"));
+            string[] labels = { "screen", "tmux", "zellij" };
+            this.multiplexer_combo.set_model (new Gtk.StringList (labels));
+            this.multiplexer_combo.set_selected (1);
+            this.multiplexer_combo.notify["selected"].connect (() => {
+                this.on_field_changed ();
+            });
+            this.multiplexer_group.add (this.multiplexer_combo);
+
+            this.multiplexer_session_row = new Adw.EntryRow ();
+            this.multiplexer_session_row.set_title (_ ("Session Name (Optional)"));
+            this.multiplexer_session_row.changed.connect (this.on_field_changed);
+            this.multiplexer_group.add (this.multiplexer_session_row);
         }
 
         // Distrobox fields
@@ -568,6 +599,27 @@ namespace StillTerminal {
             }
             this.update_ssh_command_preview ();
 
+            if (profile.type == StProfileType.MULTIPLEXER) {
+                string program = this.get_type_param_or_empty (
+                    profile,
+                    "multiplexer"
+                ).ascii_down ();
+                switch (program) {
+                    case "screen":
+                        this.multiplexer_combo.set_selected (0);
+                        break;
+                    case "zellij":
+                        this.multiplexer_combo.set_selected (2);
+                        break;
+                    default:
+                        this.multiplexer_combo.set_selected (1);
+                        break;
+                }
+                this.multiplexer_session_row.set_text (
+                    this.get_type_param_or_empty (profile, "session")
+                );
+            }
+
             // Load container-specific fields
             if (profile.type == StProfileType.DISTROBOX) {
                 string img = "";
@@ -627,6 +679,7 @@ namespace StillTerminal {
 
             this.set_icon (profile.icon_name);
             this.update_ssh_fields_visibility ();
+            this.update_multiplexer_fields_visibility ();
         }
 
         private string get_profile_type_display_name (StProfileType type) {
@@ -637,6 +690,8 @@ namespace StillTerminal {
                     return _ ("Container Profile");
                 case StProfileType.SSH:
                     return _ ("Remote SSH Profile");
+                case StProfileType.MULTIPLEXER:
+                    return _ ("Multiplexer Profile");
                 default:
                     return _ ("Unknown Profile Type");
             }
@@ -713,12 +768,18 @@ namespace StillTerminal {
                 this.set_icon ("ubuntu-symbolic");
             }
 
+            string? spawn_command = this.profile.type == StProfileType.MULTIPLEXER
+                ? null
+                : (this.spawn_command_row.get_text () != ""
+                    ? this.spawn_command_row.get_text ()
+                    : null);
+
             var edited_profile = new StProfile (
                 profile_id,
                 this.name_row.get_text ().strip (),
                 selected_color_scheme,
                 this.working_directory_row.get_text (),
-                this.spawn_command_row.get_text () != "" ? this.spawn_command_row.get_text () : null,
+                spawn_command,
                 this.profile.profile_file,
                 this.profile.icon_name,  // This should be the current icon from editor
                 this.profile.type,
@@ -796,8 +857,10 @@ namespace StillTerminal {
         }
 
         private Gee.HashMap<string, string>? collect_type_params (string profile_id, string? ssh_host, string? ssh_user, int ssh_port) {
-            // Non-container, non-SSH profiles: keep existing type_params unchanged
-            if (this.profile.type != StProfileType.DISTROBOX && this.profile.type != StProfileType.SSH) {
+            // Profiles without type-specific editor fields keep existing parameters.
+            if (this.profile.type != StProfileType.DISTROBOX
+                && this.profile.type != StProfileType.SSH
+                && this.profile.type != StProfileType.MULTIPLEXER) {
                 return this.profile.type_params;
             }
 
@@ -812,6 +875,33 @@ namespace StillTerminal {
                         p[entry.key] = entry.value;
                     }
                 }
+            }
+
+            if (this.profile.type == StProfileType.MULTIPLEXER) {
+                if (p.has_key ("multiplexer")) {
+                    p.unset ("multiplexer");
+                }
+                if (p.has_key ("session")) {
+                    p.unset ("session");
+                }
+
+                switch ((int) this.multiplexer_combo.get_selected ()) {
+                    case 0:
+                        p["multiplexer"] = "screen";
+                        break;
+                    case 2:
+                        p["multiplexer"] = "zellij";
+                        break;
+                    default:
+                        p["multiplexer"] = "tmux";
+                        break;
+                }
+
+                string session = this.multiplexer_session_row.get_text ().strip ();
+                if (session != "") {
+                    p["session"] = session;
+                }
+                return p;
             }
 
             // SSH-specific parameters are stored in type_params for SSH profiles
@@ -954,8 +1044,14 @@ namespace StillTerminal {
             bool name_valid = this.validate_name ();
             bool directory_valid = this.validate_directory ();
             bool ssh_valid = this.validate_ssh_fields ();
+            bool multiplexer_valid = this.validate_multiplexer_fields ();
 
-            this.is_valid = name_valid && directory_valid && ssh_valid;
+            this.is_valid = (
+                name_valid
+                && directory_valid
+                && ssh_valid
+                && multiplexer_valid
+            );
         }
 
         private bool validate_name () {
@@ -981,6 +1077,21 @@ namespace StillTerminal {
                 this.working_directory_row.add_css_class ("error");
             }
 
+            return valid;
+        }
+
+        private bool validate_multiplexer_fields () {
+            if (this.profile.type != StProfileType.MULTIPLEXER) {
+                return true;
+            }
+
+            string session = this.multiplexer_session_row.get_text ();
+            bool valid = MultiplexerCommand.is_valid_session_name (session);
+            if (valid) {
+                this.multiplexer_session_row.remove_css_class ("error");
+            } else {
+                this.multiplexer_session_row.add_css_class ("error");
+            }
             return valid;
         }
 
@@ -1096,6 +1207,14 @@ namespace StillTerminal {
             this.ssh_private_key_row.set_visible (is_ssh_profile);
             this.ssh_extra_options_row.set_visible (is_ssh_profile);
             this.ssh_password_row.set_visible (is_ssh_profile);
+        }
+
+        private void update_multiplexer_fields_visibility () {
+            bool is_multiplexer = (
+                this.profile.type == StProfileType.MULTIPLEXER
+            );
+            this.multiplexer_group.set_visible (is_multiplexer);
+            this.spawn_command_row.set_visible (!is_multiplexer);
         }
 
         private void update_container_fields_visibility () {

@@ -137,6 +137,13 @@ namespace StillTerminal {
                     string msg = "printf '%s\\n' " + GLib.Shell.quote (_ ("st-distrobox not found in PATH. Please install st-distrobox."));
                     return { shell, "-c", msg + "; exec " + shell };
 
+                case StProfileType.MULTIPLEXER:
+                    var multiplexer_args = profile.get_multiplexer_arguments ();
+                    if (multiplexer_args != null) {
+                        return multiplexer_args;
+                    }
+                    return new string[] { GLib.Environment.get_variable ("SHELL") };
+
                 case StProfileType.SSH:
                     var ssh_args = profile.get_ssh_arguments ();
                     if (ssh_args != null) {

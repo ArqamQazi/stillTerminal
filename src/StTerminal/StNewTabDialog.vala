@@ -4,9 +4,11 @@ namespace StillTerminal {
         public Adw.NavigationView nav_view;
         public Adw.PreferencesPage page;
         public Adw.PreferencesGroup system;
+        public Adw.PreferencesGroup multiplexers;
         public Adw.PreferencesGroup containers;
         public Adw.PreferencesGroup ssh;
         private Adw.ActionRow system_empty_row;
+        private Adw.ActionRow multiplexer_empty_row;
         private Adw.ActionRow containers_empty_row;
         private Adw.ActionRow ssh_empty_row;
         public MainWindow main_window;
@@ -36,6 +38,10 @@ namespace StillTerminal {
             system.title = _ ("System");
             system.description = _ ("Terminals Accessing Your Main System");
 
+            multiplexers = new Adw.PreferencesGroup ();
+            multiplexers.title = _ ("Multiplexers");
+            multiplexers.description = _ ("Persistent screen, tmux, and zellij sessions");
+
             containers = new Adw.PreferencesGroup ();
             containers.title = _ ("Containers");
             containers.description = _ ("Terminals Accessing Your Containers");
@@ -45,6 +51,7 @@ namespace StillTerminal {
             ssh.description = _ ("Terminals Accessing Remote Connections");
 
             page.add (system);
+            page.add (multiplexers);
             page.add (containers);
             page.add (ssh);
 
@@ -86,6 +93,7 @@ namespace StillTerminal {
 
             // Track profile counts for each group
             int system_count = 0;
+            int multiplexer_count = 0;
             int containers_count = 0;
             int ssh_count = 0;
 
@@ -119,6 +127,10 @@ namespace StillTerminal {
                         system.add (action_row);
                         system_count++;
                         break;
+                    case StProfileType.MULTIPLEXER:
+                        multiplexers.add (action_row);
+                        multiplexer_count++;
+                        break;
                     case StProfileType.DISTROBOX:
                         containers.add (action_row);
                         containers_count++;
@@ -138,6 +150,13 @@ namespace StillTerminal {
                 system.add (this.system_empty_row);
             }
 
+            if (multiplexer_count == 0) {
+                this.multiplexer_empty_row = new Adw.ActionRow ();
+                this.multiplexer_empty_row.title = _ ("No Multiplexer Profiles Exist");
+                this.multiplexer_empty_row.sensitive = false;
+                multiplexers.add (this.multiplexer_empty_row);
+            }
+
             if (containers_count == 0) {
                 this.containers_empty_row = new Adw.ActionRow ();
                 this.containers_empty_row.title = _ ("No Container Profiles Exist");
@@ -154,6 +173,7 @@ namespace StillTerminal {
 
             // Always show groups
             system.visible = true;
+            multiplexers.visible = true;
             containers.visible = true;
             ssh.visible = true;
         }
@@ -161,17 +181,23 @@ namespace StillTerminal {
         private void clear_groups () {
             // Recreate groups to ensure they're clean
             page.remove (system);
+            page.remove (multiplexers);
             page.remove (containers);
             page.remove (ssh);
 
             // Clear empty row references
             this.system_empty_row = null;
+            this.multiplexer_empty_row = null;
             this.containers_empty_row = null;
             this.ssh_empty_row = null;
 
             system = new Adw.PreferencesGroup ();
             system.title = _ ("System");
             system.description = _ ("Terminals Accessing Your Main System");
+
+            multiplexers = new Adw.PreferencesGroup ();
+            multiplexers.title = _ ("Multiplexers");
+            multiplexers.description = _ ("Persistent screen, tmux, and zellij sessions");
 
             containers = new Adw.PreferencesGroup ();
             containers.title = _ ("Containers");
@@ -182,6 +208,7 @@ namespace StillTerminal {
             ssh.description = _ ("Terminals Accessing Remote Connections");
 
             page.add (system);
+            page.add (multiplexers);
             page.add (containers);
             page.add (ssh);
         }
@@ -293,6 +320,26 @@ namespace StillTerminal {
             group.add (system_row);
             last_button = system_button;
 
+            var multiplexer_row = new Adw.ActionRow ();
+            multiplexer_row.set_title (_ ("Multiplexer Profile"));
+            multiplexer_row.set_subtitle (_ ("Use screen, tmux, or zellij"));
+            var multiplexer_icon = new Gtk.Image.from_icon_name (
+                "utilities-terminal-symbolic"
+            );
+            multiplexer_row.add_prefix (multiplexer_icon);
+            var multiplexer_button = new Gtk.CheckButton ();
+            multiplexer_button.valign = Gtk.Align.CENTER;
+            multiplexer_button.halign = Gtk.Align.END;
+            multiplexer_button.set_group (last_button);
+            multiplexer_button.toggled.connect ((btn) => { if (btn.active) {
+                                                               this.selected_type = StProfileType.MULTIPLEXER;
+                                                           }
+                                                });
+            multiplexer_row.add_suffix (multiplexer_button);
+            multiplexer_row.set_activatable_widget (multiplexer_button);
+            group.add (multiplexer_row);
+            last_button = multiplexer_button;
+
             var container_row = new Adw.ActionRow ();
             container_row.set_title (_ ("Container Profile"));
             container_row.set_subtitle (_ ("Use a container (Distrobox)"));
@@ -363,6 +410,9 @@ namespace StillTerminal {
             switch (profile_type) {
                 case StProfileType.SYSTEM:
                     blank_profile.type_subtitle = "";
+                    break;
+                case StProfileType.MULTIPLEXER:
+                    blank_profile.type_subtitle = _ ("Terminal Multiplexer");
                     break;
                 case StProfileType.DISTROBOX:
                     blank_profile.type_subtitle = _ ("Container Environment");
