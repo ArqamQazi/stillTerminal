@@ -59,7 +59,7 @@ restore_locale_domain() {
     fi
 }
 
-for domain in gtk40 glib20 libadwaita io.stillhq.terminal; do
+for domain in gtk40 glib20 libadwaita; do
     restore_locale_domain "$domain"
 done
 
