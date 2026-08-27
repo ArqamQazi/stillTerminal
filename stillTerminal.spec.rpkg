@@ -6,7 +6,7 @@ Summary:        A tabbed terminal emulator for stillOS
 
 License:        GPL-3.0-or-later
 URL:            https://gitlab.com/stillhq/stillTerminal/
-Source0:        {{{ git_dir_pack }}}
+Source0:        {{{ git_dir_pack dir_name="stillTerminal-main" }}}
 
 BuildRequires:  meson >= 0.56.0
 BuildRequires:  ninja-build
@@ -38,7 +38,7 @@ It features custom themes and profiles, with support for SSH
 and distrobox container integration.
 
 %prep
-{{{ git_dir_setup_macro }}}
+%autosetup -n stillTerminal-main
 
 %build
 %meson
