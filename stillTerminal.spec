@@ -1,6 +1,6 @@
 Name:           still-terminal
 Version:        10.2.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A tabbed terminal emulator for stillOS
 
 License:        GPL-3.0-or-later
