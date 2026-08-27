@@ -4,6 +4,9 @@ stages:
 
 build:appimage:
   stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
   image: ghcr.io/pkgforge-dev/archlinux:latest
   script:
     # Replicate pkgforge-dev/anylinux-setup-action@v2
