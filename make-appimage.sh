@@ -52,10 +52,6 @@ set -e
 _extension_dst=$DATADIR/nautilus-python/extensions/still-terminal-nautilus.py
 mkdir -p "${_extension_dst%/*}"
 cp -f "$APPDIR"/bin/still-terminal-nautilus.py "$_extension_dst"
-
-if [ -n "${ARG0:-}" ]; then
-  sed -i "s|\\['still-terminal'|\\[\"$ARG0\"|g" "$_extension_dst"
-fi
 EOF
 chmod +x "$APPDIR/bin/install-nautilus-extension.hook"
 
