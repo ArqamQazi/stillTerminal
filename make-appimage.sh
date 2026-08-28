@@ -50,10 +50,8 @@ cat << 'EOF' > "$APPDIR/bin/install-nautilus-extension.hook"
 set -e
 
 _extension_dst=$DATADIR/nautilus-python/extensions/still-terminal-nautilus.py
-if [ ! -f "$_extension_dst" ]; then
-  mkdir -p "${_extension_dst%/*}"
-  cp -v "$APPDIR"/bin/still-terminal-nautilus.py "$_extension_dst"
-fi
+mkdir -p "${_extension_dst%/*}"
+cp -f "$APPDIR"/bin/still-terminal-nautilus.py "$_extension_dst"
 EOF
 chmod +x "$APPDIR/bin/install-nautilus-extension.hook"
 
