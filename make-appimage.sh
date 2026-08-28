@@ -41,6 +41,22 @@ echo "---------------------------------------------------------------"
     /usr/bin/still-terminal \
     /usr/bin/st-distrobox
 
+# ── Bundle nautilus extension ────────────────────────────────────────
+echo "Bundling nautilus extension..."
+cp nautilus/still-terminal-nautilus.py "$APPDIR/bin/"
+cat << 'EOF' > "$APPDIR/bin/install-nautilus-extension.hook"
+#!/bin/sh
+
+set -e
+
+_extension_dst=$DATADIR/nautilus-python/extensions/still-terminal-nautilus.py
+if [ ! -f "$_extension_dst" ]; then
+  mkdir -p "${_extension_dst%/*}"
+  cp -v "$APPDIR"/bin/still-terminal-nautilus.py "$_extension_dst"
+fi
+EOF
+chmod +x "$APPDIR/bin/install-nautilus-extension.hook"
+
 # ── Restore toolkit locale files removed by quick-sharun debloating ──
 echo "Restoring toolkit locale files..."
 
