@@ -38,6 +38,10 @@ namespace StillTerminal {
             this.hexpand = true;
             this.set_enable_fallback_scrolling (true);
 
+            // OSC 8 hyperlinks: VTE only tracks and highlights them when
+            // this is enabled, and it is off by default.
+            this.set_allow_hyperlink (true);
+
             // Used if custom font is disabled
             this.default_font_desc = this.get_font ().copy ();
             this.spawn_profile ();
@@ -45,6 +49,9 @@ namespace StillTerminal {
 
             // Track when child processes exit
             this.child_exited.connect (on_child_exited);
+
+            // Show the hyperlink target while hovering over an OSC 8 link
+            this.hyperlink_hover_uri_changed.connect (on_hyperlink_hover_uri_changed);
 
             // Drag and drop support
             var drop_target = new Gtk.DropTarget (GLib.Type.INVALID, Gdk.DragAction.COPY);
@@ -448,6 +455,26 @@ namespace StillTerminal {
             }
 
             return false;
+        }
+
+        private void on_hyperlink_hover_uri_changed (string? uri, Gdk.Rectangle? bbox) {
+            // VTE emits this with uri == null when the pointer leaves a link.
+            string? label = StHyperlink.label_for (uri);
+            if (label == null) {
+                this.set_tooltip_text (null);
+                return;
+            }
+            // The label comes from the stream, so it must not be interpreted
+            // as Pango markup.
+            this.set_tooltip_markup (GLib.Markup.escape_text (label));
+        }
+
+        /**
+         * Return the target of the OSC 8 hyperlink at @x, @y, or null when
+         * there is no link under that position.
+         */
+        public string? get_hyperlink_at (double x, double y) {
+            return this.check_hyperlink_at (x, y);
         }
 
         private void ensure_close_prompt_controller () {

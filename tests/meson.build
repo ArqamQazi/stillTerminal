@@ -88,3 +88,31 @@ new_tab_button_policy_test = executable(
 )
 
 test('new tab button policy', new_tab_button_policy_test)
+
+hyperlink_source = configure_file(
+  input: '../src/StTerminal/StHyperlink.vala',
+  output: 'StHyperlink.vala',
+  copy: true,
+)
+
+hyperlink_policy_source = configure_file(
+  input: '../src/StTerminal/StHyperlinkPolicy.vala',
+  output: 'StHyperlinkPolicy.vala',
+  copy: true,
+)
+
+hyperlink_test = executable(
+  'hyperlink-test',
+  [
+    hyperlink_source,
+    hyperlink_policy_source,
+    'StHyperlinkTest.vala',
+  ],
+  dependencies: [
+    dependency('glib-2.0'),
+    dependency('gobject-2.0'),
+    dependency('gtk4'),
+  ],
+)
+
+test('OSC 8 hyperlink handling', hyperlink_test)
